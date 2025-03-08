@@ -33,7 +33,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 mt-12">
+    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40">
       <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3 shadow-xl ring-1 ring-white/20 animate-glow">
         <nav className="flex flex-col space-y-6">
           <button 
