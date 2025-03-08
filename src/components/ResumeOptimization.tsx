@@ -16,11 +16,12 @@ export function ResumeOptimization() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [editedResume, setEditedResume] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('optimized');
+  const [editorInstance, setEditorInstance] = useState<any>(null);
 
   // Validate required parameters
   if (!params.userId || !params.jobId || !params.optimizationId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
+      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-16">
         <div className="max-w-7xl mx-auto ml-20">
           <div className="bg-red-900/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-red-500/20">
             <h2 className="text-2xl font-bold text-red-400 mb-4">Invalid Request</h2>
@@ -67,6 +68,17 @@ export function ResumeOptimization() {
     }
   };
 
+  const handleKeywordClick = (keyword: string) => {
+    if (editorInstance && activeTab === 'optimized') {
+      const { state, view } = editorInstance;
+      const { selection } = state;
+      const position = selection.$head.pos;
+      
+      view.dispatch(view.state.tr.insertText(keyword + ' ', position));
+      view.focus();
+    }
+  };
+
   // Show loading while checking authentication
   if (isAuthenticated === null) {
     return (
@@ -98,7 +110,7 @@ export function ResumeOptimization() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
+      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-16">
         <div className="max-w-7xl mx-auto ml-20">
           <div className="bg-red-900/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-red-500/20">
             <h2 className="text-2xl font-bold text-red-400 mb-4">Error</h2>
@@ -125,83 +137,86 @@ export function ResumeOptimization() {
   const optimizedHtml = optimizedResume.optimized_resume.replace(/```html\n?|\n?```/g, '');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
-      <div className="max-w-7xl mx-auto ml-20">
-        <div className="flex gap-4">
-          {/* Left Section - 70% */}
-          <div className="flex-[0.7] h-[calc(100vh-8rem)]">
-            <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 h-full flex flex-col">
-              {/* Tabs */}
-              <div className="flex border-b border-white/10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-16">
+      <div className="flex">
+        {/* Left Section - Fixed - 75% */}
+        <div className="fixed top-16 bottom-8 left-28 right-[24%] pr-4">
+          <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 h-full flex flex-col">
+            {/* Tabs */}
+            <div className="flex border-b border-white/10">
+              <button
+                onClick={() => setActiveTab('optimized')}
+                className={`px-6 py-3 text-sm font-medium ${
+                  activeTab === 'optimized'
+                    ? 'border-b-2 border-blue-500 text-blue-500'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Optimized Resume
+              </button>
+              <button
+                onClick={() => setActiveTab('original')}
+                className={`px-6 py-3 text-sm font-medium ${
+                  activeTab === 'original'
+                    ? 'border-b-2 border-blue-500 text-blue-500'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Original Resume
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-6">
+                {activeTab === 'optimized' ? (
+                  <Editor
+                    content={editedResume || optimizedHtml}
+                    onChange={setEditedResume}
+                    onEditorReady={setEditorInstance}
+                  />
+                ) : (
+                  <OriginalResume userId={params.userId} />
+                )}
+              </div>
+            </div>
+
+            {/* Save Button */}
+            {activeTab === 'optimized' && (
+              <div className="p-4 border-t border-white/10 bg-black/20">
                 <button
-                  onClick={() => setActiveTab('optimized')}
-                  className={`px-6 py-3 text-sm font-medium ${
-                    activeTab === 'optimized'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
+                  onClick={handleSave}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
                 >
-                  Optimized Resume
-                </button>
-                <button
-                  onClick={() => setActiveTab('original')}
-                  className={`px-6 py-3 text-sm font-medium ${
-                    activeTab === 'original'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Original Resume
+                  <Save className="w-4 h-4" />
+                  Save Changes
                 </button>
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="p-6">
-                  {activeTab === 'optimized' ? (
-                    <Editor
-                      content={editedResume || optimizedHtml}
-                      onChange={setEditedResume}
-                    />
-                  ) : (
-                    <OriginalResume userId={params.userId} />
-                  )}
-                </div>
-              </div>
-
-              {/* Save Button */}
-              {activeTab === 'optimized' && (
-                <div className="p-4 border-t border-white/10 bg-black/20">
-                  <button
-                    onClick={handleSave}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-                  >
-                    <Save className="w-4 h-4" />
-                    Save Changes
-                  </button>
-                </div>
-              )}
+        {/* Right Section - 24% */}
+        <div className="w-[24%] ml-[76%] space-y-3 pb-8">
+          {/* ATS Score */}
+          <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 p-4">
+            <h2 className="text-lg font-semibold mb-2">ATS Score</h2>
+            <div className="flex justify-center scale-75 origin-center">
+              <MatchGauge
+                percentage={85}
+                size="lg"
+                label="ATS Compatibility"
+              />
             </div>
           </div>
 
-          {/* Right Section - 30% */}
-          <div className="flex-[0.3] space-y-4">
-            {/* ATS Score */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 p-6">
-              <h2 className="text-xl font-semibold mb-4">ATS Score</h2>
-              <div className="flex justify-center">
-                <MatchGauge
-                  percentage={85}
-                  size="lg"
-                  label="ATS Compatibility"
-                />
-              </div>
-            </div>
-
-            {/* Keywords and Requirements */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 p-6">
-              <KeywordsList metadata={optimizedResume.metadata ? JSON.parse(optimizedResume.metadata) : {}} />
-            </div>
+          {/* Keywords and Requirements */}
+          <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 p-4">
+            <KeywordsList 
+              metadata={optimizedResume.metadata ? JSON.parse(optimizedResume.metadata) : {}}
+              onKeywordClick={handleKeywordClick}
+              isClickable={activeTab === 'optimized'}
+            />
           </div>
         </div>
       </div>

@@ -1,9 +1,12 @@
 import React from 'react';
-import { Menu, LogOut, FileText } from 'lucide-react';
+import { Menu, LogOut, FileText, Settings, HelpCircle, LayoutDashboard, Upload, Briefcase } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 export function FloatingMenu() {
+  const navigate = useNavigate();
+
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -16,7 +19,7 @@ export function FloatingMenu() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-sm shadow-xl">
-      <div className="max-w-7xl mx-auto px-4 py-2">
+      <div className="max-w-5xl mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <svg 
@@ -34,18 +37,18 @@ export function FloatingMenu() {
               <path d="M1828.5 55.5H1892.5V335.5H1828.5V55.5Z"/>
             </svg>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <Menu className="w-6 h-6 text-white/80" />
+              <Menu className="w-5 h-5 text-white/80" />
             </button>
             <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <FileText className="w-6 h-6 text-white/80" />
+              <FileText className="w-5 h-5 text-white/80" />
             </button>
             <button 
               onClick={handleSignOut}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <LogOut className="w-6 h-6 text-white/80" />
+              <LogOut className="w-5 h-5 text-white/80" />
             </button>
           </div>
         </div>

@@ -3,6 +3,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface KeywordsListProps {
   metadata: Record<string, any>;
+  onKeywordClick?: (keyword: string) => void;
+  isClickable?: boolean;
 }
 
 const formatKey = (key: string) => {
@@ -12,7 +14,7 @@ const formatKey = (key: string) => {
     .join(' ');
 };
 
-export function KeywordsList({ metadata }: KeywordsListProps) {
+export function KeywordsList({ metadata, onKeywordClick, isClickable = false }: KeywordsListProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['hard_skills', 'soft_skills']));
 
   const toggleSection = (section: string) => {
@@ -30,11 +32,14 @@ export function KeywordsList({ metadata }: KeywordsListProps) {
   const renderValue = (value: any) => {
     if (Array.isArray(value)) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {value.map((item, index) => (
             <div 
               key={index}
-              className="bg-blue-900/20 px-3 py-1.5 rounded text-sm"
+              className={`bg-blue-900/20 px-3 py-1.5 rounded text-sm ${isClickable ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
+              onClick={() => isClickable && onKeywordClick?.(item)}
+              role={isClickable ? "button" : undefined}
+              title={isClickable ? "Click to add to resume" : undefined}
             >
               {item}
             </div>
@@ -45,7 +50,12 @@ export function KeywordsList({ metadata }: KeywordsListProps) {
     
     if (typeof value === 'string' && value) {
       return (
-        <div className="bg-blue-900/20 px-3 py-1.5 rounded text-sm">
+        <div 
+          className={`bg-blue-900/20 px-3 py-1.5 rounded text-sm ${isClickable ? 'cursor-pointer hover:bg-blue-900/40 transition-colors' : ''}`}
+          onClick={() => isClickable && onKeywordClick?.(value)}
+          role={isClickable ? "button" : undefined}
+          title={isClickable ? "Click to add to resume" : undefined}
+        >
           {value}
         </div>
       );
