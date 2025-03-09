@@ -44,7 +44,7 @@ export function ATSCheckpoints({ data }: ATSCheckpointsProps) {
                 <tr key={key} className="border-b border-white/5 hover:bg-white/5">
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className={`w-4 h-4 ${scoreColor}`} />
+                      <CheckCircle className={`w-5 h-5 flex-shrink-0 ${scoreColor}`} />
                       <span>{key}</span>
                     </div>
                   </td>

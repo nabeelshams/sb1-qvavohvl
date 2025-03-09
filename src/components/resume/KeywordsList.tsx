@@ -14,6 +14,16 @@ const formatKey = (key: string) => {
     .join(' ');
 };
 
+// List of sections to exclude
+const excludedSections = [
+  'experience_level',
+  'location',
+  'work_mode',
+  'minimum_salary',
+  'currency',
+  'salary_type'
+];
+
 export function KeywordsList({ metadata, onKeywordClick, isClickable = false }: KeywordsListProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['hard_skills', 'soft_skills']));
 
@@ -67,38 +77,40 @@ export function KeywordsList({ metadata, onKeywordClick, isClickable = false }: 
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold mb-4">Keywords & Requirements</h3>
-      {Object.entries(metadata).map(([key, value]) => {
-        // Skip empty arrays or empty strings
-        if (
-          (Array.isArray(value) && value.length === 0) ||
-          (typeof value === 'string' && !value)
-        ) {
-          return null;
-        }
+      {Object.entries(metadata)
+        .filter(([key]) => !excludedSections.includes(key))
+        .map(([key, value]) => {
+          // Skip empty arrays or empty strings
+          if (
+            (Array.isArray(value) && value.length === 0) ||
+            (typeof value === 'string' && !value)
+          ) {
+            return null;
+          }
 
-        const isExpanded = expandedSections.has(key);
+          const isExpanded = expandedSections.has(key);
 
-        return (
-          <div key={key} className="bg-black/20 rounded-lg overflow-hidden">
-            <button
-              onClick={() => toggleSection(key)}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
-            >
-              <span className="font-medium">{formatKey(key)}</span>
-              {isExpanded ? (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-gray-400" />
+          return (
+            <div key={key} className="bg-black/20 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleSection(key)}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              >
+                <span className="font-medium">{formatKey(key)}</span>
+                {isExpanded ? (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+              {isExpanded && (
+                <div className="px-4 pb-4 space-y-2">
+                  {renderValue(value)}
+                </div>
               )}
-            </button>
-            {isExpanded && (
-              <div className="px-4 pb-4 space-y-2">
-                {renderValue(value)}
-              </div>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
     </div>
   );
 }

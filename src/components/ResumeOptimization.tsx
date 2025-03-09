@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useOptimizedResume } from '../hooks/useOptimizedResume';
@@ -172,12 +172,13 @@ export function ResumeOptimization() {
               {!atsLoading && atsData && (
                 <button
                   onClick={() => setActiveTab('ats')}
-                  className={`px-6 py-3 text-sm font-medium ${
+                  className={`px-6 py-3 text-sm font-medium flex items-center gap-2 ${
                     activeTab === 'ats'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'border-b-2 border-purple-500 text-purple-400 bg-purple-500/10'
+                      : 'text-gray-400 hover:text-white hover:bg-purple-500/5'
                   }`}
                 >
+                  <Sparkles className="w-4 h-4" />
                   ATS Check Points
                 </button>
               )}
