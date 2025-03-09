@@ -4,6 +4,7 @@ import { Loader2, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useOptimizedResume } from '../hooks/useOptimizedResume';
+import { useATSScore } from '../hooks/useATSScore';
 import { Editor } from './resume/Editor';
 import { KeywordsList } from './resume/KeywordsList';
 import { OriginalResume } from './resume/OriginalResume';
@@ -35,6 +36,10 @@ export function ResumeOptimization() {
   const { optimizedResume, loading, error } = useOptimizedResume({
     userId: params.userId,
     jobId: params.jobId,
+    optimizationId: params.optimizationId
+  });
+
+  const { atsScore, loading: atsLoading } = useATSScore({
     optimizationId: params.optimizationId
   });
 
@@ -203,8 +208,9 @@ export function ResumeOptimization() {
             <h2 className="text-lg font-semibold mb-2">ATS Score</h2>
             <div className="flex justify-center scale-75 origin-center">
               <MatchGauge
-                percentage={85}
+                percentage={atsScore}
                 size="lg"
+                loading={atsLoading}
                 label="ATS Compatibility"
               />
             </div>

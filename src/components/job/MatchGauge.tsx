@@ -5,9 +5,10 @@ interface MatchGaugeProps {
   size?: 'sm' | 'lg';
   onClick?: () => void;
   label?: string;
+  loading?: boolean;
 }
 
-export function MatchGauge({ percentage, size = 'sm', onClick, label }: MatchGaugeProps) {
+export function MatchGauge({ percentage, size = 'sm', onClick, label, loading = false }: MatchGaugeProps) {
   const isLarge = size === 'lg';
   const width = isLarge ? 240 : 200;
   const height = isLarge ? 160 : 130;
@@ -49,7 +50,7 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label }: MatchGau
         />
         
         {/* Percentage arc */}
-        {percentage !== null && (
+        {percentage !== null && !loading && (
           <path
             d={`M 20 ${height - 10} A ${width / 2 - 20} ${width / 2 - 20} 0 0 1 ${width - 20} ${height - 10}`}
             fill="none"
@@ -63,8 +64,23 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label }: MatchGau
           />
         )}
         
+        {/* Loading animation */}
+        {loading && (
+          <path
+            d={`M 20 ${height - 10} A ${width / 2 - 20} ${width / 2 - 20} 0 0 1 ${width - 20} ${height - 10}`}
+            fill="none"
+            stroke={`url(#${getGradientId()})`}
+            strokeWidth="16"
+            strokeLinecap="round"
+            className="animate-gauge-loading"
+            style={{
+              strokeDasharray: '140, 560',
+            }}
+          />
+        )}
+        
         {/* Needle */}
-        {percentage !== null && (
+        {percentage !== null && !loading && (
           <g transform={`translate(${width / 2}, ${height - 10})`}>
             <line
               x1="0"
@@ -91,7 +107,11 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label }: MatchGau
       
       {/* Percentage text */}
       <div className="mt-2">
-        {percentage !== null ? (
+        {loading ? (
+          <span className={`text-blue-400 font-medium ${isLarge ? 'text-2xl' : 'text-xl'}`}>
+            Processing
+          </span>
+        ) : percentage !== null ? (
           <span className={`font-semibold ${isLarge ? 'text-3xl' : 'text-2xl'}`}>
             {Math.round(percentage)}%
           </span>

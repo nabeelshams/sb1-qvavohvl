@@ -71,6 +71,19 @@
   }
 }
 
+@keyframes gauge-loading {
+  0% {
+    stroke-dashoffset: 700;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-gauge-loading {
+  animation: gauge-loading 2s linear infinite;
+}
+
 .animate-glow {
   animation: glow 3s ease-in-out infinite;
 }
