@@ -8,9 +8,10 @@ import { useATSScore } from '../hooks/useATSScore';
 import { Editor } from './resume/Editor';
 import { KeywordsList } from './resume/KeywordsList';
 import { OriginalResume } from './resume/OriginalResume';
+import { ATSCheckpoints } from './resume/ATSCheckpoints';
 import { MatchGauge } from './job/MatchGauge';
 
-type TabType = 'optimized' | 'original';
+type TabType = 'optimized' | 'original' | 'ats';
 
 export function ResumeOptimization() {
   const params = useParams<{ userId: string; jobId: string; optimizationId: string }>();
@@ -39,7 +40,7 @@ export function ResumeOptimization() {
     optimizationId: params.optimizationId
   });
 
-  const { atsScore, loading: atsLoading } = useATSScore({
+  const { atsScore, atsData, loading: atsLoading } = useATSScore({
     optimizationId: params.optimizationId
   });
 
@@ -52,9 +53,11 @@ export function ResumeOptimization() {
     checkAuth();
   }, [params.userId]);
 
+  // Update editedResume when optimizedResume changes
   useEffect(() => {
     if (optimizedResume?.optimized_resume) {
       const cleanHtml = optimizedResume.optimized_resume.replace(/```html\n?|\n?```/g, '');
+      console.log('Setting edited resume content:', cleanHtml);
       setEditedResume(cleanHtml);
     }
   }, [optimizedResume]);
@@ -138,9 +141,6 @@ export function ResumeOptimization() {
     );
   }
 
-  // Clean the HTML content
-  const optimizedHtml = optimizedResume.optimized_resume.replace(/```html\n?|\n?```/g, '');
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-16">
       <div className="flex">
@@ -169,6 +169,18 @@ export function ResumeOptimization() {
               >
                 Original Resume
               </button>
+              {!atsLoading && atsData && (
+                <button
+                  onClick={() => setActiveTab('ats')}
+                  className={`px-6 py-3 text-sm font-medium ${
+                    activeTab === 'ats'
+                      ? 'border-b-2 border-blue-500 text-blue-500'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  ATS Check Points
+                </button>
+              )}
             </div>
 
             {/* Content */}
@@ -176,12 +188,15 @@ export function ResumeOptimization() {
               <div className="p-6">
                 {activeTab === 'optimized' ? (
                   <Editor
-                    content={editedResume || optimizedHtml}
+                    key={`editor-${editedResume.length}`} // Force re-render when content changes
+                    content={editedResume}
                     onChange={setEditedResume}
                     onEditorReady={setEditorInstance}
                   />
-                ) : (
+                ) : activeTab === 'original' ? (
                   <OriginalResume userId={params.userId} />
+                ) : (
+                  <ATSCheckpoints data={atsData} />
                 )}
               </div>
             </div>

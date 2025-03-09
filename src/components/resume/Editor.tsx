@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
@@ -20,13 +20,21 @@ export function Editor({ content, onChange, onEditorReady }: EditorProps) {
         types: ['heading', 'paragraph'],
       }),
     ],
-    content,
+    content: content || '<p></p>',
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
-  });
+  }, [content]); // Add content as a dependency
 
-  React.useEffect(() => {
+  // Update editor content when prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content || '<p></p>');
+    }
+  }, [editor, content]);
+
+  // Notify parent when editor is ready
+  useEffect(() => {
     if (editor && onEditorReady) {
       onEditorReady(editor);
     }
