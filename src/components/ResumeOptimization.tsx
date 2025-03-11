@@ -235,7 +235,11 @@ export function ResumeOptimization() {
           {/* Keywords and Requirements */}
           <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 p-4">
             <KeywordsList 
-              metadata={optimizedResume.metadata ? JSON.parse(optimizedResume.metadata) : {}}
+              metadata={optimizedResume.metadata ? 
+                (typeof optimizedResume.metadata === 'string' ? 
+                  JSON.parse(optimizedResume.metadata) : 
+                  optimizedResume.metadata
+                ) : {}}
               onKeywordClick={handleKeywordClick}
               isClickable={activeTab === 'optimized'}
             />
