@@ -194,7 +194,7 @@ export function ResumeOptimization() {
 
       // Add default styling
       const styledHtml = `
-        <div style="font-family: Arial, sans-serif;">
+        <div style="font-family: Roboto, Arial, sans-serif;">
           ${editedResume}
         </div>
       `;
@@ -217,7 +217,7 @@ export function ResumeOptimization() {
       const docDefinition = {
         content: [content],
         defaultStyle: {
-          font: 'Helvetica',
+          font: 'Roboto',
           fontSize: 12,
           lineHeight: 1.5
         },
