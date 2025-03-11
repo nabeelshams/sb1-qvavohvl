@@ -21,7 +21,9 @@ const excludedSections = [
   'work_mode',
   'minimum_salary',
   'currency',
-  'salary_type'
+  'salary_type',
+  'maximum_salary',
+  'degree_requirement'
 ];
 
 export function KeywordsList({ metadata, onKeywordClick, isClickable = false }: KeywordsListProps) {

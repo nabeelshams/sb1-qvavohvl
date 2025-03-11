@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Loader2, Save, Sparkles } from 'lucide-react';
+import { Loader2, Save, Sparkles, FileDown, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { useOptimizedResume } from '../hooks/useOptimizedResume';
@@ -10,15 +10,16 @@ import { KeywordsList } from './resume/KeywordsList';
 import { OriginalResume } from './resume/OriginalResume';
 import { ATSCheckpoints } from './resume/ATSCheckpoints';
 import { MatchGauge } from './job/MatchGauge';
-
-type TabType = 'optimized' | 'original' | 'ats';
+import { jsPDF } from 'jspdf';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
 
 export function ResumeOptimization() {
   const params = useParams<{ userId: string; jobId: string; optimizationId: string }>();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [editedResume, setEditedResume] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('optimized');
+  const [activeTab, setActiveTab] = useState<'optimized' | 'original' | 'ats'>('optimized');
   const [editorInstance, setEditorInstance] = useState<any>(null);
+  const [downloading, setDownloading] = useState<'pdf' | 'doc' | null>(null);
 
   // Validate required parameters
   if (!params.userId || !params.jobId || !params.optimizationId) {
@@ -57,7 +58,6 @@ export function ResumeOptimization() {
   useEffect(() => {
     if (optimizedResume?.optimized_resume) {
       const cleanHtml = optimizedResume.optimized_resume.replace(/```html\n?|\n?```/g, '');
-      console.log('Setting edited resume content:', cleanHtml);
       setEditedResume(cleanHtml);
     }
   }, [optimizedResume]);
@@ -84,6 +84,80 @@ export function ResumeOptimization() {
       
       view.dispatch(view.state.tr.insertText(keyword + ' ', position));
       view.focus();
+    }
+  };
+
+  const downloadAsPDF = async () => {
+    try {
+      setDownloading('pdf');
+      const doc = new jsPDF();
+      
+      // Create a temporary div to render the HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = editedResume;
+      tempDiv.style.width = '170mm'; // A4 width minus margins
+      document.body.appendChild(tempDiv);
+      
+      // Convert HTML to PDF
+      await doc.html(tempDiv, {
+        callback: (doc) => {
+          doc.save('optimized_resume.pdf');
+          document.body.removeChild(tempDiv);
+        },
+        x: 20,
+        y: 20,
+        width: 170,
+        windowWidth: 650
+      });
+      
+      toast.success('PDF downloaded successfully!');
+    } catch (error: any) {
+      toast.error('Failed to download PDF: ' + error.message);
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const downloadAsDoc = async () => {
+    try {
+      setDownloading('doc');
+
+      // Create a temporary div to parse HTML content
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = editedResume;
+
+      // Convert HTML content to docx format
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: tempDiv.textContent || '',
+                }),
+              ],
+            }),
+          ],
+        }],
+      });
+
+      // Generate and download the file
+      const buffer = await Packer.toBlob(doc);
+      const url = window.URL.createObjectURL(buffer);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'optimized_resume.docx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('DOCX downloaded successfully!');
+    } catch (error: any) {
+      toast.error('Failed to download DOCX: ' + error.message);
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -189,7 +263,7 @@ export function ResumeOptimization() {
               <div className="p-6">
                 {activeTab === 'optimized' ? (
                   <Editor
-                    key={`editor-${editedResume.length}`} // Force re-render when content changes
+                    key={`editor-${editedResume.length}`}
                     content={editedResume}
                     onChange={setEditedResume}
                     onEditorReady={setEditorInstance}
@@ -202,12 +276,38 @@ export function ResumeOptimization() {
               </div>
             </div>
 
-            {/* Save Button */}
+            {/* Action Buttons */}
             {activeTab === 'optimized' && (
-              <div className="p-4 border-t border-white/10 bg-black/20">
+              <div className="p-4 border-t border-white/10 bg-black/20 flex justify-between items-center">
+                <div className="flex gap-2">
+                  <button
+                    onClick={downloadAsPDF}
+                    disabled={downloading === 'pdf'}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 rounded hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  >
+                    {downloading === 'pdf' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileDown className="w-4 h-4" />
+                    )}
+                    Download PDF
+                  </button>
+                  <button
+                    onClick={downloadAsDoc}
+                    disabled={downloading === 'doc'}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 rounded hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  >
+                    {downloading === 'doc' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
+                    Download DOCX
+                  </button>
+                </div>
                 <button
                   onClick={handleSave}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
                 >
                   <Save className="w-4 h-4" />
                   Save Changes
