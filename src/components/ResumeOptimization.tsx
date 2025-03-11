@@ -192,15 +192,21 @@ export function ResumeOptimization() {
     try {
       setDownloading('pdf');
 
-      // Add default styling
-      const styledHtml = `
-        <div style="font-family: Roboto, Arial, sans-serif;">
-          ${editedResume}
-        </div>
-      `;
+      // Create a temporary container to clean the HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = editedResume;
+
+      // Remove any style tags
+      const styleTags = tempDiv.getElementsByTagName('style');
+      while (styleTags.length > 0) {
+        styleTags[0].parentNode?.removeChild(styleTags[0]);
+      }
+
+      // Get the cleaned HTML
+      const cleanedHtml = tempDiv.innerHTML;
 
       // Convert HTML to pdfmake format
-      const content = htmlToPdfmake(styledHtml, {
+      const content = htmlToPdfmake(cleanedHtml, {
         defaultStyles: {
           h1: { fontSize: 24, bold: true, marginBottom: 10 },
           h2: { fontSize: 20, bold: true, marginBottom: 8 },
