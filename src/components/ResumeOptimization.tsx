@@ -10,8 +10,9 @@ import { KeywordsList } from './resume/KeywordsList';
 import { OriginalResume } from './resume/OriginalResume';
 import { ATSCheckpoints } from './resume/ATSCheckpoints';
 import { MatchGauge } from './job/MatchGauge';
-import { jsPDF } from 'jspdf';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, UnderlineType, convertInchesToTwip } from 'docx';
+import pdfMake from '../lib/pdfmake';
+import htmlToPdfmake from 'html-to-pdfmake';
 
 export function ResumeOptimization() {
   const params = useParams<{ userId: string; jobId: string; optimizationId: string }>();
@@ -87,28 +88,144 @@ export function ResumeOptimization() {
     }
   };
 
+  const parseHtmlToDocxElements = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const elements: (Paragraph | any)[] = [];
+
+    const processNode = (node: Node): any[] => {
+      const result: any[] = [];
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.textContent?.trim()) {
+          return [new TextRun(node.textContent)];
+        }
+        return [];
+      }
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as Element;
+        const style = window.getComputedStyle(element);
+
+        switch (element.tagName.toLowerCase()) {
+          case 'h1':
+            return [new Paragraph({
+              text: element.textContent || '',
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: convertInchesToTwip(0.4), after: convertInchesToTwip(0.2) }
+            })];
+          case 'h2':
+            return [new Paragraph({
+              text: element.textContent || '',
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: convertInchesToTwip(0.3), after: convertInchesToTwip(0.15) }
+            })];
+          case 'h3':
+            return [new Paragraph({
+              text: element.textContent || '',
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: convertInchesToTwip(0.2), after: convertInchesToTwip(0.1) }
+            })];
+          case 'p':
+            const runs: TextRun[] = [];
+            element.childNodes.forEach(child => {
+              if (child.nodeType === Node.TEXT_NODE) {
+                runs.push(new TextRun(child.textContent || ''));
+              } else if (child.nodeType === Node.ELEMENT_NODE) {
+                const childElement = child as Element;
+                switch (childElement.tagName.toLowerCase()) {
+                  case 'strong':
+                  case 'b':
+                    runs.push(new TextRun({
+                      text: childElement.textContent || '',
+                      bold: true
+                    }));
+                    break;
+                  case 'em':
+                  case 'i':
+                    runs.push(new TextRun({
+                      text: childElement.textContent || '',
+                      italics: true
+                    }));
+                    break;
+                  case 'u':
+                    runs.push(new TextRun({
+                      text: childElement.textContent || '',
+                      underline: { type: UnderlineType.SINGLE }
+                    }));
+                    break;
+                }
+              }
+            });
+            return [new Paragraph({
+              children: runs,
+              spacing: { after: convertInchesToTwip(0.15) }
+            })];
+          case 'ul':
+          case 'ol':
+            const listItems: Paragraph[] = [];
+            element.querySelectorAll('li').forEach((li, index) => {
+              listItems.push(new Paragraph({
+                text: li.textContent || '',
+                bullet: {
+                  level: 0
+                },
+                spacing: { after: convertInchesToTwip(0.1) }
+              }));
+            });
+            return listItems;
+        }
+
+        // Process child nodes recursively
+        element.childNodes.forEach(child => {
+          result.push(...processNode(child));
+        });
+      }
+
+      return result;
+    };
+
+    return processNode(doc.body);
+  };
+
   const downloadAsPDF = async () => {
     try {
       setDownloading('pdf');
-      const doc = new jsPDF();
-      
-      // Create a temporary div to render the HTML
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = editedResume;
-      tempDiv.style.width = '170mm'; // A4 width minus margins
-      document.body.appendChild(tempDiv);
-      
-      // Convert HTML to PDF
-      await doc.html(tempDiv, {
-        callback: (doc) => {
-          doc.save('optimized_resume.pdf');
-          document.body.removeChild(tempDiv);
-        },
-        x: 20,
-        y: 20,
-        width: 170,
-        windowWidth: 650
+
+      // Add default styling
+      const styledHtml = `
+        <div style="font-family: Arial, sans-serif;">
+          ${editedResume}
+        </div>
+      `;
+
+      // Convert HTML to pdfmake format
+      const content = htmlToPdfmake(styledHtml, {
+        defaultStyles: {
+          h1: { fontSize: 24, bold: true, marginBottom: 10 },
+          h2: { fontSize: 20, bold: true, marginBottom: 8 },
+          h3: { fontSize: 16, bold: true, marginBottom: 6 },
+          p: { fontSize: 12, marginBottom: 5 },
+          ul: { marginLeft: 20 },
+          li: { fontSize: 12 },
+          strong: { bold: true },
+          em: { italics: true }
+        }
       });
+
+      // Create PDF document definition
+      const docDefinition = {
+        content: [content],
+        defaultStyle: {
+          font: 'Helvetica',
+          fontSize: 12,
+          lineHeight: 1.5
+        },
+        pageMargins: [40, 40, 40, 40]
+      };
+
+      // Generate and download PDF
+      pdfMake.createPdf(docDefinition).download('optimized_resume.pdf');
       
       toast.success('PDF downloaded successfully!');
     } catch (error: any) {
@@ -122,29 +239,17 @@ export function ResumeOptimization() {
     try {
       setDownloading('doc');
 
-      // Create a temporary div to parse HTML content
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = editedResume;
-
-      // Convert HTML content to docx format
+      // Create a new document
       const doc = new Document({
         sections: [{
           properties: {},
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: tempDiv.textContent || '',
-                }),
-              ],
-            }),
-          ],
-        }],
+          children: parseHtmlToDocxElements(editedResume)
+        }]
       });
 
-      // Generate and download the file
-      const buffer = await Packer.toBlob(doc);
-      const url = window.URL.createObjectURL(buffer);
+      // Generate and download the document
+      const blob = await Packer.toBlob(doc);
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = 'optimized_resume.docx';
