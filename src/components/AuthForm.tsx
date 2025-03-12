@@ -7,20 +7,51 @@ export function AuthForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      const { error } = isLogin
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        });
 
-      if (error) throw error;
-      toast.success(isLogin ? 'Logged in successfully!' : 'Signed up successfully!');
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            setError('Invalid email or password');
+          } else {
+            setError(error.message);
+          }
+          return;
+        }
+
+        if (data.user) {
+          toast.success('Logged in successfully!');
+        }
+      } else {
+        const { data, error } = await supabase.auth.signUp({ 
+          email, 
+          password 
+        });
+
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        if (!data.user || data.user.identities?.length === 0) {
+          setError('An account with this email already exists');
+        } else {
+          toast.success('Signed up successfully!');
+        }
+      }
     } catch (error: any) {
-      toast.error(error.message);
+      setError(error.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -50,6 +81,13 @@ export function AuthForm() {
         <h2 className="text-2xl font-bold text-white mb-6 text-center">
           {isLogin ? 'Login' : 'Sign Up'}
         </h2>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
@@ -80,7 +118,10 @@ export function AuthForm() {
           </button>
         </form>
         <button
-          onClick={() => setIsLogin(!isLogin)}
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError(null);
+          }}
           className="w-full text-gray-400 mt-4 hover:text-white transition-colors"
         >
           {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
