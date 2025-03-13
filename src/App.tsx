@@ -67,7 +67,7 @@ function App() {
       <Sidebar />
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/upload-cv" element={<ContactForm />} />
+        <Route path="/upload-cv" element={<ContactForm isNewUser={isNewUser} />} />
         <Route path="/cv-details/:cvUrl" element={<CVDetailsForm />} />
         <Route path="/job-search-rule" element={<JobSearchRule />} />
         <Route path="/jobs-found" element={<JobFound />} />
