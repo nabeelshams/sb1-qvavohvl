@@ -1,6 +1,7 @@
 import { supabase } from '../../../lib/supabase';
 import { JobSearchFormData } from '../../../types/jobSearch';
 import { countryCodes } from '../../../utils/countryCodes';
+import { uuidv4 } from '../../../utils/uuid';
 
 export async function saveJobSearchRules(
   userId: string,
@@ -71,10 +72,14 @@ export async function startJobSearch(
 
   console.log('CV details fetched:', cvDetails);
 
+  // Generate a unique run ID
+  const run_id = uuidv4();
+
   // Prepare webhook data
   const webhookData = {
     uid: userId,
     job_id: jobId || 'default',  // Provide a default value if jobId is undefined
+    run_id, // Add the run_id to the payload
     job_title: formData.job_title,  // Changed from job_titles array
     country: formData.country,
     country_code: countryCodes[formData.country] || '',
@@ -122,7 +127,7 @@ export async function startJobSearch(
       throw new Error(`Failed to start job search: ${response.statusText}`);
     }
 
-    console.log('Job search started successfully');
+    console.log('Job search started successfully with run_id:', run_id);
   } catch (error) {
     console.error('Error triggering webhook:', error);
     throw error;
