@@ -7,19 +7,15 @@ interface JobSearchContextType {
   formData: JobSearchFormData;
   loading: boolean;
   searching: boolean;
-  newJobTitle: string;
   countryCode: string;
   whatsappNumber: string;
   enableWhatsapp: boolean;
-  setNewJobTitle: (value: string) => void;
   setCountryCode: (value: string) => void;
   setWhatsappNumber: (value: string) => void;
   setEnableWhatsapp: (value: boolean) => void;
   updateFormData: (field: keyof JobSearchFormData, value: any) => void;
   updateJobTypePreference: (field: keyof JobTypePreferences, value: string) => void;
   updateSalaryRange: (field: keyof SalaryRange, value: number) => void;
-  addJobTitle: (title: string) => void;
-  removeJobTitle: (title: string) => void;
   retryFetch: () => Promise<void>;
 }
 
@@ -41,7 +37,6 @@ function parseWhatsAppNumber(notifyWhatsapp: string | null): {
     return { countryCode: '+1', number: '', enabled: false };
   }
 
-  // Match country code pattern (e.g., +1, +44, +91)
   const countryCodeMatch = notifyWhatsapp.match(/^\+\d+/);
   if (!countryCodeMatch) {
     return { countryCode: '+1', number: notifyWhatsapp, enabled: true };
@@ -57,15 +52,31 @@ function parseWhatsAppNumber(notifyWhatsapp: string | null): {
   };
 }
 
+function parseJobTitle(jobTitles: any): string {
+  try {
+    // If it's a string with quotes, remove them
+    if (typeof jobTitles === 'string') {
+      return jobTitles.replace(/^"|"$/g, '').trim();
+    }
+    // If it's an array, take the first item and remove quotes
+    if (Array.isArray(jobTitles) && jobTitles.length > 0) {
+      const firstTitle = jobTitles[0];
+      return typeof firstTitle === 'string' ? firstTitle.replace(/^"|"$/g, '').trim() : '';
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 export function JobSearchProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
-  const [newJobTitle, setNewJobTitle] = useState('');
   const [countryCode, setCountryCode] = useState('+1');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [enableWhatsapp, setEnableWhatsapp] = useState(false);
   const [formData, setFormData] = useState<JobSearchFormData>({
-    job_titles: [],
+    job_title: '',
     country: '',
     city: '',
     salary_range: {
@@ -114,8 +125,7 @@ export function JobSearchProvider({ children }: { children: React.ReactNode }) {
         const jobTypePrefs = data.job_type_preferences || {};
 
         setFormData({
-          job_titles: Array.isArray(data.job_titles) ? data.job_titles : 
-                     typeof data.job_titles === 'string' ? data.job_titles.split(',').map(t => t.trim()) : [],
+          job_title: parseJobTitle(data.job_titles),
           country: data.country || '',
           city: data.city || '',
           salary_range: {
@@ -172,22 +182,6 @@ export function JobSearchProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const addJobTitle = (title: string) => {
-    if (!formData.job_titles.includes(title.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        job_titles: [...prev.job_titles, title.trim()]
-      }));
-    }
-  };
-
-  const removeJobTitle = (title: string) => {
-    setFormData(prev => ({
-      ...prev,
-      job_titles: prev.job_titles.filter(t => t !== title)
-    }));
-  };
-
   const retryFetch = async () => {
     setLoading(true);
     await fetchJobSearchRule();
@@ -198,19 +192,15 @@ export function JobSearchProvider({ children }: { children: React.ReactNode }) {
       formData,
       loading,
       searching,
-      newJobTitle,
       countryCode,
       whatsappNumber,
       enableWhatsapp,
-      setNewJobTitle,
       setCountryCode,
       setWhatsappNumber,
       setEnableWhatsapp,
       updateFormData,
       updateJobTypePreference,
       updateSalaryRange,
-      addJobTitle,
-      removeJobTitle,
       retryFetch
     }}>
       {children}

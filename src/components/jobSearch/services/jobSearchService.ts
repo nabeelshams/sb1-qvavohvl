@@ -14,7 +14,7 @@ export async function saveJobSearchRules(
   const { error } = await supabase
     .from('cv_details')
     .update({
-      job_titles: formData.job_titles,
+      job_titles: formData.job_title,  // Changed from array to single string
       country: formData.country,
       city: formData.city,
       salary_min: formData.salary_range.min,
@@ -52,7 +52,7 @@ export async function startJobSearch(
   const webhookData = {
     uid: userId,
     job_id: jobId,
-    job_titles: formData.job_titles,
+    job_title: formData.job_title,  // Changed from array to single string
     country: formData.country,
     country_code: countryCodes[formData.country] || '',
     city: formData.city,

@@ -10,7 +10,7 @@ export interface SalaryRange {
 }
 
 export interface JobSearchFormData {
-  job_titles: string[];
+  job_title: string;  // Changed from job_titles array to single string
   country: string;
   city: string;
   salary_range: SalaryRange;

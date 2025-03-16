@@ -11,7 +11,6 @@ import { LocationSection } from './jobSearch/LocationSection';
 import { SalarySection } from './jobSearch/SalarySection';
 import { JobTypeSection } from './jobSearch/JobTypeSection';
 import { NotificationSection } from './jobSearch/NotificationSection';
-import { phoneCountryCodes } from '../utils/phoneCountryCodes';
 
 interface JobSearchRuleProps {
   isNewUser?: boolean;
@@ -26,30 +25,19 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
     formData,
     loading,
     searching,
-    newJobTitle,
     countryCode,
     whatsappNumber,
     enableWhatsapp,
-    setNewJobTitle,
     setCountryCode,
     setWhatsappNumber,
     setEnableWhatsapp,
     updateFormData,
     updateJobTypePreference,
     updateSalaryRange,
-    addJobTitle,
-    removeJobTitle,
     retryFetch
   } = useJobSearch();
-  const { validateRequiredFields } = useFormValidation();
 
-  const handleAddJobTitle = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && newJobTitle.trim()) {
-      e.preventDefault();
-      addJobTitle(newJobTitle.trim());
-      setNewJobTitle('');
-    }
-  };
+  const { validateRequiredFields } = useFormValidation();
 
   const handleSave = async () => {
     try {
@@ -140,11 +128,8 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
 
         <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-white/20 animate-glow">
           <JobTitlesSection
-            jobTitles={formData.job_titles}
-            newJobTitle={newJobTitle}
-            onNewJobTitleChange={setNewJobTitle}
-            onAddJobTitle={handleAddJobTitle}
-            onRemoveJobTitle={removeJobTitle}
+            jobTitle={formData.job_title}
+            onJobTitleChange={(value) => updateFormData('job_title', value)}
           />
 
           <LocationSection
@@ -168,7 +153,6 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
             email={formData.email}
             whatsappNumber={whatsappNumber}
             countryCode={countryCode}
-            countryCodes={phoneCountryCodes}
             enableWhatsapp={enableWhatsapp}
             onEmailChange={(value) => updateFormData('email', value)}
             onWhatsappChange={setWhatsappNumber}

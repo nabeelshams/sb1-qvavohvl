@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Settings, HelpCircle, LayoutDashboard, Upload, Briefcase } from 'lucide-react';
+import { FileText, Settings, HelpCircle, LayoutDashboard, Upload, Briefcase, Sliders } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -33,53 +33,62 @@ export function Sidebar() {
   };
 
   return (
-    <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40">
-      <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3 shadow-xl ring-1 ring-white/20 animate-glow">
-        <nav className="flex flex-col space-y-6">
+    <div className="fixed left-2 top-1/2 -translate-y-1/2 z-40">
+      <div className="bg-black/30 backdrop-blur-sm rounded-lg p-2 shadow-xl ring-1 ring-white/20 animate-glow">
+        <nav className="flex flex-col space-y-4">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-3 hover:bg-white/10 rounded-lg transition-colors group relative"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
           >
-            <LayoutDashboard className="w-6 h-6 text-white/80" />
+            <LayoutDashboard className="w-5 h-5 text-white/80" />
             <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Dashboard
             </span>
           </button>
           <button 
-            onClick={handleCVManager}
-            className="p-3 hover:bg-white/10 rounded-lg transition-colors group relative"
-          >
-            <FileText className="w-6 h-6 text-white/80" />
-            <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-              CV Manager
-            </span>
-          </button>
-          <button 
             onClick={() => navigate('/upload-cv')}
-            className="p-3 hover:bg-white/10 rounded-lg transition-colors group relative"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
           >
-            <Upload className="w-6 h-6 text-white/80" />
+            <Upload className="w-5 h-5 text-white/80" />
             <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Upload CV
             </span>
           </button>
           <button 
-            onClick={() => navigate('/jobs-found')}
-            className="p-3 hover:bg-white/10 rounded-lg transition-colors group relative"
+            onClick={handleCVManager}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
           >
-            <Briefcase className="w-6 h-6 text-white/80" />
+            <FileText className="w-5 h-5 text-white/80" />
+            <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              CV Manager
+            </span>
+          </button>
+          <button 
+            onClick={() => navigate('/job-search-rule')}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
+          >
+            <Sliders className="w-5 h-5 text-white/80" />
+            <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              Job Search Preferences
+            </span>
+          </button>
+          <button 
+            onClick={() => navigate('/jobs-found')}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
+          >
+            <Briefcase className="w-5 h-5 text-white/80" />
             <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Jobs Found
             </span>
           </button>
-          <button className="p-3 hover:bg-white/10 rounded-lg transition-colors group relative">
-            <Settings className="w-6 h-6 text-white/80" />
+          <button className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative">
+            <Settings className="w-5 h-5 text-white/80" />
             <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Settings
             </span>
           </button>
-          <button className="p-3 hover:bg-white/10 rounded-lg transition-colors group relative">
-            <HelpCircle className="w-6 h-6 text-white/80" />
+          <button className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative">
+            <HelpCircle className="w-5 h-5 text-white/80" />
             <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Help
             </span>

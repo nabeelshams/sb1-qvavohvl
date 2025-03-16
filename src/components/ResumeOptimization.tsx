@@ -330,7 +330,7 @@ export function ResumeOptimization() {
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-16">
       <div className="flex">
         {/* Left Section - Fixed - 75% */}
-        <div className="fixed top-16 bottom-8 left-28 right-[24%] pr-4">
+        <div className="fixed top-16 bottom-8 left-16 right-[24%] pr-4">
           <div className="bg-black/30 backdrop-blur-sm rounded-lg shadow-xl ring-1 ring-white/20 h-full flex flex-col">
             {/* Tabs */}
             <div className="flex border-b border-white/10">

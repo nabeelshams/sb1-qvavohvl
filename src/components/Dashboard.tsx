@@ -79,14 +79,14 @@ export function Dashboard() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white">
         <div className="max-w-6xl mx-auto px-8 pt-20 pb-8">
-          <div className="bg-red-900/30 backdrop-blur-sm p-6 rounded-lg mb-8 border border-red-500/30 ml-20">
+          <div className="bg-red-900/30 backdrop-blur-sm p-6 rounded-lg mb-8 border border-red-500/30 ml-12">
             <div className="flex flex-col items-center gap-4 text-center">
               <p className="text-red-200">{error}</p>
               <button
                 onClick={() => checkCVStatus(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >
-                <RefreshCcw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4" />
                 Retry Connection
               </button>
             </div>
@@ -101,7 +101,7 @@ export function Dashboard() {
       <div className="max-w-6xl mx-auto px-8 pt-20 pb-8">
         {/* CV Upload Notice */}
         {hasCV === false && (
-          <div className="bg-blue-900/30 backdrop-blur-sm p-6 rounded-lg mb-8 border border-blue-500/30 ml-20">
+          <div className="bg-blue-900/30 backdrop-blur-sm p-6 rounded-lg mb-8 border border-blue-500/30 ml-12">
             <div className="flex items-center gap-4">
               <Upload className="w-8 h-8 text-blue-400" />
               <div>
@@ -121,7 +121,7 @@ export function Dashboard() {
         )}
 
         {/* Dashboard Content */}
-        <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-white/20 animate-glow ml-20">
+        <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-white/20 animate-glow ml-12">
           <h1 className="text-4xl font-bold mb-6">Dashboard</h1>
           <div className="text-gray-300">
             <p className="text-xl">🚧 Work in Progress</p>
