@@ -3,8 +3,8 @@ import toast from 'react-hot-toast';
 
 export function useFormValidation() {
   const validateRequiredFields = (formData: JobSearchFormData, enableWhatsapp: boolean, whatsappNumber: string) => {
-    if (formData.job_titles.length === 0) {
-      toast.error('Please add at least one job title');
+    if (!formData.job_title?.trim()) {
+      toast.error('Please enter a job title');
       return false;
     }
     if (!formData.country.trim()) {

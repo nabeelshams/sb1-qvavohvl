@@ -11,6 +11,12 @@ export async function saveJobSearchRules(
 ) {
   const fullWhatsappNumber = enableWhatsapp ? `${countryCode}${whatsappNumber}` : '';
 
+  console.log('Saving job search rules:', {
+    userId,
+    formData,
+    fullWhatsappNumber
+  });
+
   const { error } = await supabase
     .from('cv_details')
     .update({
@@ -25,7 +31,10 @@ export async function saveJobSearchRules(
     })
     .eq('uid', userId);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error saving job search rules:', error);
+    throw error;
+  }
 }
 
 export async function startJobSearch(
@@ -36,6 +45,15 @@ export async function startJobSearch(
   whatsappNumber: string,
   jobId: string
 ) {
+  console.log('Starting job search with data:', {
+    userId,
+    formData,
+    enableWhatsapp,
+    countryCode,
+    whatsappNumber,
+    jobId
+  });
+
   // First, save the job search rules
   await saveJobSearchRules(userId, formData, enableWhatsapp, countryCode, whatsappNumber);
 
@@ -46,13 +64,18 @@ export async function startJobSearch(
     .eq('uid', userId)
     .single();
 
-  if (cvError) throw cvError;
+  if (cvError) {
+    console.error('Error fetching CV details:', cvError);
+    throw cvError;
+  }
+
+  console.log('CV details fetched:', cvDetails);
 
   // Prepare webhook data
   const webhookData = {
     uid: userId,
-    job_id: jobId,
-    job_title: formData.job_title,  // Changed from array to single string
+    job_id: jobId || 'default',  // Provide a default value if jobId is undefined
+    job_title: formData.job_title,  // Changed from job_titles array
     country: formData.country,
     country_code: countryCodes[formData.country] || '',
     city: formData.city,
@@ -77,16 +100,31 @@ export async function startJobSearch(
     languages: cvDetails?.languages || []
   };
 
-  // Trigger webhook
-  const response = await fetch('https://hook.eu2.make.com/jtaieaifo26rr1dwz7knyq1lg54lby2i', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(webhookData),
-  });
+  console.log('Webhook data prepared:', webhookData);
 
-  if (!response.ok) {
-    throw new Error('Failed to start job search');
+  try {
+    // Trigger webhook
+    const response = await fetch('https://hook.eu2.make.com/jtaieaifo26rr1dwz7knyq1lg54lby2i', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Webhook response error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText
+      });
+      throw new Error(`Failed to start job search: ${response.statusText}`);
+    }
+
+    console.log('Job search started successfully');
+  } catch (error) {
+    console.error('Error triggering webhook:', error);
+    throw error;
   }
 }
