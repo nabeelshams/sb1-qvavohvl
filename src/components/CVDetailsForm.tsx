@@ -169,7 +169,7 @@ export function CVDetailsForm() {
 
       await saveCVDetails(user.id, cvUrl, formData);
       toast.success('CV details saved successfully');
-      navigate('/job-search-rule');
+      navigate('/job-search-rule', { state: { isNewUser: isNew } });
     } catch (error: any) {
       toast.error(error.message);
     }

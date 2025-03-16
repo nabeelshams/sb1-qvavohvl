@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Briefcase, Loader2, Save, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
@@ -19,6 +19,9 @@ interface JobSearchRuleProps {
 
 function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isNewFromState = location.state?.isNewUser ?? isNewUser;
+
   const {
     formData,
     loading,
@@ -97,7 +100,7 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
       <div className="max-w-4xl mx-auto">
-        {isNewUser ? (
+        {isNewFromState ? (
           <>
             <div className="text-center mb-8">
               <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
@@ -194,7 +197,7 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
               ) : (
                 <>
                   <Briefcase className="w-5 h-5" />
-                  {isNewUser ? "Let's Find Your Dream Job!" : 'Go get a job!'}
+                  {isNewFromState ? "Let's Find Your Dream Job!" : 'Go get a job!'}
                 </>
               )}
             </button>
