@@ -69,7 +69,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/upload-cv" element={<ContactForm isNewUser={isNewUser} />} />
         <Route path="/cv-details/:cvUrl" element={<CVDetailsForm />} />
-        <Route path="/job-search-rule" element={<JobSearchRule />} />
+        <Route path="/job-search-rule" element={<JobSearchRule isNewUser={isNewUser} />} />
         <Route path="/jobs-found" element={<JobFound />} />
         <Route path="/resume-optimization/:userId/:jobId/:optimizationId" element={<ResumeOptimization />} />
         <Route path="/" element={

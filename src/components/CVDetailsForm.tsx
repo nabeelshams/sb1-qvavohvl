@@ -197,17 +197,38 @@ export function CVDetailsForm() {
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
       <div className="max-w-6xl mx-auto">
         {isNew ? (
-          <div className="text-center mb-8">
-            <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
-              Step 2 of 3
+          <>
+            <div className="text-center mb-8">
+              <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
+                Step 2 of 3
+              </div>
+              <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+                Review Your CV Details
+              </h1>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                We've analyzed your CV and extracted the key information. Please review and enhance these details to ensure we find the most relevant job opportunities for you.
+              </p>
             </div>
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-              Review Your CV Details
-            </h1>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              We've analyzed your CV and extracted the key information. Please review and enhance these details to ensure we find the most relevant job opportunities for you.
-            </p>
-          </div>
+
+            {/* Steps Overview */}
+            <div className="grid grid-cols-3 gap-6 mb-12">
+              <div className="p-4 bg-black/20 rounded-lg border border-blue-500/20">
+                <div className="text-blue-400 font-bold mb-2">Step 1</div>
+                <p className="text-sm text-gray-400">Upload CV</p>
+                <div className="mt-2 w-full h-1 bg-blue-500 rounded-full" />
+              </div>
+              <div className="p-4 bg-black/20 rounded-lg border border-purple-500/20">
+                <div className="text-purple-400 font-bold mb-2">Step 2</div>
+                <p className="text-sm text-gray-400">Review and enhance CV details</p>
+                <div className="mt-2 w-full h-1 bg-purple-500/50 rounded-full animate-pulse" />
+              </div>
+              <div className="p-4 bg-black/20 rounded-lg border border-pink-500/20">
+                <div className="text-pink-400 font-bold mb-2">Step 3</div>
+                <p className="text-sm text-gray-400">Set your job preferences</p>
+                <div className="mt-2 w-full h-1 bg-gray-700 rounded-full" />
+              </div>
+            </div>
+          </>
         ) : (
           <h2 className="text-3xl font-bold mb-8">CV Details</h2>
         )}

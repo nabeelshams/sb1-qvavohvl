@@ -226,20 +226,41 @@ export function ContactForm({ isNewUser = false }: ContactFormProps) {
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white pt-24 px-8 pb-8">
       <div className="max-w-6xl mx-auto">
         {isNewUser ? (
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
-              Step 1 of 3
+          <>
+            <div className="text-center mb-8">
+              <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
+                Step 1 of 3
+              </div>
+              <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+                Welcome to Chaakri
+              </h1>
+              <h2 className="text-3xl font-bold mb-4">Let's Start with Your CV</h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                To help you find the perfect job opportunities, we'll need your CV. 
+                Upload it now and our AI will analyze it to understand your skills, 
+                experience, and preferences.
+              </p>
             </div>
-            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-              Welcome to Chaakri
-            </h1>
-            <h2 className="text-3xl font-bold mb-4">Let's Start with Your CV</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              To help you find the perfect job opportunities, we'll need your CV. 
-              Upload it now and our AI will analyze it to understand your skills, 
-              experience, and preferences.
-            </p>
-          </div>
+
+            {/* Steps Overview */}
+            <div className="grid grid-cols-3 gap-6 mb-12">
+              <div className="p-4 bg-black/20 rounded-lg border border-blue-500/20">
+                <div className="text-blue-400 font-bold mb-2">Step 1</div>
+                <p className="text-sm text-gray-400">Upload CV</p>
+                <div className="mt-2 w-full h-1 bg-blue-500/50 rounded-full animate-pulse" />
+              </div>
+              <div className="p-4 bg-black/20 rounded-lg border border-purple-500/20">
+                <div className="text-purple-400 font-bold mb-2">Step 2</div>
+                <p className="text-sm text-gray-400">Review and enhance CV details</p>
+                <div className="mt-2 w-full h-1 bg-gray-700 rounded-full" />
+              </div>
+              <div className="p-4 bg-black/20 rounded-lg border border-pink-500/20">
+                <div className="text-pink-400 font-bold mb-2">Step 3</div>
+                <p className="text-sm text-gray-400">Set your job preferences</p>
+                <div className="mt-2 w-full h-1 bg-gray-700 rounded-full" />
+              </div>
+            </div>
+          </>
         ) : (
           <div className="text-center mb-16">
             <h1 className="text-6xl font-bold mb-4 opacity-20">UPLOAD CV</h1>
@@ -274,26 +295,6 @@ export function ContactForm({ isNewUser = false }: ContactFormProps) {
               Supported formats: PDF, DOC, DOCX
             </p>
           </div>
-
-          {isNewUser && (
-            <div className="mt-8 text-center">
-              <h4 className="text-lg font-medium text-gray-300 mb-4">What happens next?</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <div className="text-blue-400 font-bold mb-2">Step 2</div>
-                  <p className="text-sm text-gray-400">Review and enhance your CV details</p>
-                </div>
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <div className="text-purple-400 font-bold mb-2">Step 3</div>
-                  <p className="text-sm text-gray-400">Set your job preferences</p>
-                </div>
-                <div className="p-4 bg-black/20 rounded-lg">
-                  <div className="text-pink-400 font-bold mb-2">Ready!</div>
-                  <p className="text-sm text-gray-400">Start receiving matched jobs</p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
