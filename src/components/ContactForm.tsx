@@ -214,7 +214,7 @@ export function ContactForm({ isNewUser = false }: ContactFormProps) {
       });
 
       toast.success('CV uploaded and converted successfully!');
-      navigate(`/cv-details/${encodeURIComponent(publicUrl)}`);
+      navigate(`/cv-details/${encodeURIComponent(publicUrl)}?isNew=true`);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
