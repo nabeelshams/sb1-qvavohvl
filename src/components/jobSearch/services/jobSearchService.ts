@@ -43,16 +43,14 @@ export async function startJobSearch(
   formData: JobSearchFormData,
   enableWhatsapp: boolean,
   countryCode: string,
-  whatsappNumber: string,
-  jobId: string
+  whatsappNumber: string
 ) {
   console.log('Starting job search with data:', {
     userId,
     formData,
     enableWhatsapp,
     countryCode,
-    whatsappNumber,
-    jobId
+    whatsappNumber
   });
 
   // First, save the job search rules
@@ -78,9 +76,8 @@ export async function startJobSearch(
   // Prepare webhook data
   const webhookData = {
     uid: userId,
-    job_id: jobId || 'default',  // Provide a default value if jobId is undefined
-    run_id, // Add the run_id to the payload
-    job_title: formData.job_title,  // Changed from job_titles array
+    run_id,
+    job_title: formData.job_title,
     country: formData.country,
     country_code: countryCodes[formData.country] || '',
     city: formData.city,
@@ -128,6 +125,7 @@ export async function startJobSearch(
     }
 
     console.log('Job search started successfully with run_id:', run_id);
+    return run_id;
   } catch (error) {
     console.error('Error triggering webhook:', error);
     throw error;

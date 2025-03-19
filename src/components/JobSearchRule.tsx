@@ -60,8 +60,12 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      await startJobSearch(user.id, formData, enableWhatsapp, countryCode, whatsappNumber);
-      navigate('/jobs-found');
+      const run_id = await startJobSearch(user.id, formData, enableWhatsapp, countryCode, whatsappNumber);
+      
+      // Navigate with both state and query parameter
+      navigate(`/jobs-found?runId=${run_id}`, {
+        state: { runId: run_id }
+      });
     } catch (error: any) {
       toast.error('Failed to start job search. Please try again.');
     }
@@ -161,30 +165,37 @@ function JobSearchRuleContent({ isNewUser = false }: JobSearchRuleProps) {
           />
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4">
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-            >
-              <Save className="w-5 h-5" /> Save Rules
-            </button>
-            <button
-              onClick={handleStartJobSearch}
-              disabled={searching}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 rounded hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {searching ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Starting Search...
-                </>
-              ) : (
-                <>
-                  <Briefcase className="w-5 h-5" />
-                  {isNewFromState ? "Let's Find Your Dream Job!" : 'Go get a job!'}
-                </>
-              )}
-            </button>
+          <div className="flex justify-between items-center">
+            {isNewFromState && (
+              <div className="text-sm text-gray-400">
+                Next: Start receiving matched job opportunities
+              </div>
+            )}
+            <div className="flex gap-4">
+              <button
+                onClick={handleSave}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+              >
+                <Save className="w-5 h-5" /> Save Rules
+              </button>
+              <button
+                onClick={handleStartJobSearch}
+                disabled={searching}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {searching ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Starting Search...
+                  </>
+                ) : (
+                  <>
+                    <Briefcase className="w-5 h-5" />
+                    {isNewFromState ? "Let's Find Your Dream Job!" : 'Go get a job!'}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

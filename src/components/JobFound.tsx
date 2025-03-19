@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Loader2, Building2, MapPin, DollarSign, Globe, Star, Wand2 } from 'lucide-react';
+import { Building2, MapPin, DollarSign, Globe, Star, Wand2, Loader2, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MatchGauge } from './job/MatchGauge';
 import { MatchDetails } from './job/MatchDetails';
 import { JobMatchData, JobMatch } from '../types/jobMatch';
-import { startJobSearch } from './jobSearch/services/jobSearchService';
 import { uuidv4 } from '../utils/uuid';
 
 interface Job {
@@ -34,26 +33,42 @@ interface Job {
   created_at: string;
   job_url: string;
   job_match?: any;
+  run_id: string | null;
 }
+
+type TabType = 'new' | 'previous';
 
 export function JobFound() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedJobs, setExpandedJobs] = useState<Set<string>>(new Set());
   const [selectedJobMatch, setSelectedJobMatch] = useState<JobMatchData | null>(null);
   const [optimizing, setOptimizing] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<TabType>('new');
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  useEffect(() => {
+    const runId = location.state?.runId || new URLSearchParams(location.search).get('runId');
+    console.log('Current run_id:', runId);
+    setCurrentRunId(runId);
+    setActiveTab(runId ? 'new' : 'previous');
+    if (runId) {
+      setIsSearching(true);
+    }
+  }, [location]);
 
   const parseJobMatch = (jobMatch: any): JobMatchData | null => {
     if (!jobMatch) return null;
     
     try {
-      // Handle different input types
       let rawMatch: JobMatch;
       
       if (typeof jobMatch === 'string') {
-        // Remove code block markers if present
         const cleanJson = jobMatch.replace(/```json\n|\n```/g, '').trim();
         rawMatch = JSON.parse(cleanJson);
       } else if (typeof jobMatch === 'object') {
@@ -63,18 +78,15 @@ export function JobFound() {
         return null;
       }
       
-      // Validate the parsed data has the expected structure
       if (!rawMatch["Overall Match Score"]) {
         console.error('Missing Overall Match Score:', rawMatch);
         return null;
       }
 
-      // Extract skills from rationale with better error handling
       const skillsRationale = rawMatch["Skills Match"]?.skills_rationale || '';
       const matchedSkills: string[] = [];
       const missingSkills: string[] = [];
       
-      // More robust skills parsing
       if (skillsRationale.toLowerCase().includes('matched skills:')) {
         const matched = skillsRationale
           .toLowerCase()
@@ -97,12 +109,10 @@ export function JobFound() {
         missingSkills.push(...missing);
       }
 
-      // Extract years with better error handling
       const expRationale = rawMatch["Experience Match"]?.experience_rationale || '';
       const yearsRequired = parseInt(expRationale.match(/requires (\d+)/)?.[1] || '0');
       const yearsMatched = parseInt(expRationale.match(/has (\d+)/)?.[1] || '0');
 
-      // Construct the match data with safe fallbacks
       return {
         match_data: {
           overall_percentage: rawMatch["Overall Match Score"]?.overall_percentage ?? 0,
@@ -111,7 +121,7 @@ export function JobFound() {
           education_match: rawMatch["Education Match"]?.education_percentage ?? 0,
           location_match: rawMatch["Location Match"]?.location_percentage ?? 0,
           salary_match: rawMatch["Salary Expectation Match"]?.salary_percentage ?? 0,
-          job_type_match: 100 // Default value
+          job_type_match: 100
         },
         skills_details: {
           matched: matchedSkills,
@@ -148,17 +158,14 @@ export function JobFound() {
 
       setOptimizing(prev => new Set(prev).add(job.job_id));
 
-      // Generate a new UUID for this optimization request
       const optimizationId = uuidv4();
 
-      // First, check if this ID already exists in the database
       const { data: existingOptimization } = await supabase
         .from('optimized_resumes')
         .select('id')
         .eq('id', optimizationId)
         .single();
 
-      // If the ID already exists (very unlikely but possible), generate a new one
       if (existingOptimization) {
         throw new Error('UUID collision detected. Please try again.');
       }
@@ -187,7 +194,6 @@ export function JobFound() {
         throw new Error('Failed to optimize resume');
       }
 
-      // Navigate to the resume optimization page
       navigate(`/resume-optimization/${user.id}/${job.job_id}/${optimizationId}`);
     } catch (error: any) {
       toast.error(error.message);
@@ -223,17 +229,41 @@ export function JobFound() {
           return;
         }
 
-        // Initial fetch of existing jobs
-        const { data: initialJobs, error: initialError } = await supabase
+        console.log('Fetching jobs with filters:', {
+          activeTab,
+          currentRunId,
+          userId: user.id
+        });
+
+        let query = supabase
           .from('jobs_found')
           .select('*')
-          .eq('id', user.id)  // Using 'id' instead of 'uid'
-          .order('created_at', { ascending: false });
+          .eq('id', user.id);
+
+        if (activeTab === 'new' && currentRunId) {
+          query = query.eq('run_id', currentRunId);
+        } else if (activeTab === 'previous') {
+          if (currentRunId) {
+            query = query.or(`run_id.is.null,run_id.neq.${currentRunId}`);
+          }
+        }
+
+        query = query.order('created_at', { ascending: false });
+
+        const { data: initialJobs, error: initialError } = await query;
 
         if (initialError) throw initialError;
-        setJobs(initialJobs || []);
 
-        // Set up real-time subscription
+        console.log(`Found ${initialJobs?.length || 0} jobs for ${activeTab} tab`);
+        setJobs(initialJobs || []);
+        setHasInitialLoad(true);
+
+        const filterString = activeTab === 'new' && currentRunId
+          ? `id=eq.${user.id},run_id=eq.${currentRunId}`
+          : currentRunId
+            ? `id=eq.${user.id},or=(run_id.is.null,run_id.neq.${currentRunId})`
+            : `id=eq.${user.id}`;
+
         subscription = supabase
           .channel('jobs_found_changes')
           .on(
@@ -242,31 +272,28 @@ export function JobFound() {
               event: '*',
               schema: 'public',
               table: 'jobs_found',
-              filter: `id=eq.${user.id}`  // Using 'id' instead of 'uid'
+              filter: filterString
             },
             (payload) => {
               if (payload.eventType === 'INSERT') {
-                setJobs(currentJobs => {
-                  const newJob = payload.new as Job;
-                  if (currentJobs.some(job => job.job_id === newJob.job_id)) {
-                    return currentJobs;
-                  }
-                  const updatedJobs = [newJob, ...currentJobs];
-                  return updatedJobs.sort((a, b) => 
-                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-                  );
-                });
-                toast.success('New job found!');
-              } else if (payload.eventType === 'UPDATE') {
-                setJobs(currentJobs => 
-                  currentJobs.map(job => 
-                    job.job_id === (payload.new as Job).job_id ? payload.new as Job : job
-                  )
-                );
-              } else if (payload.eventType === 'DELETE') {
-                setJobs(currentJobs => 
-                  currentJobs.filter(job => job.job_id !== (payload.old as Job).job_id)
-                );
+                const newJob = payload.new as Job;
+                
+                const isNewJob = activeTab === 'new' && newJob.run_id === currentRunId;
+                const isPreviousJob = activeTab === 'previous' && 
+                  (!newJob.run_id || newJob.run_id !== currentRunId);
+
+                if (isNewJob || isPreviousJob) {
+                  setJobs(currentJobs => {
+                    if (currentJobs.some(job => job.job_id === newJob.job_id)) {
+                      return currentJobs;
+                    }
+                    const updatedJobs = [newJob, ...currentJobs];
+                    return updatedJobs.sort((a, b) => 
+                      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                    );
+                  });
+                  toast.success('New job found!');
+                }
               }
             }
           )
@@ -274,6 +301,7 @@ export function JobFound() {
 
         setLoading(false);
       } catch (err: any) {
+        console.error('Error fetching jobs:', err);
         setError(err.message);
         setLoading(false);
         toast.error('Failed to fetch jobs');
@@ -287,42 +315,15 @@ export function JobFound() {
         supabase.removeChannel(subscription);
       }
     };
-  }, [navigate]);
+  }, [navigate, activeTab, currentRunId]);
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-red-900/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-red-500/20">
-            <h2 className="text-2xl font-bold text-red-400 mb-4">Error</h2>
-            <p className="text-red-200">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
+  if (loading && !hasInitialLoad) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
-          <h2 className="text-2xl font-bold text-blue-300">Finding Jobs</h2>
-          <p className="text-gray-400">Please wait while we search for matching opportunities...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (jobs.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <Building2 className="w-16 h-16 text-blue-500" />
-          <h2 className="text-2xl font-bold text-blue-300">Searching for Jobs</h2>
-          <p className="text-gray-400 max-w-md">
-            We're actively searching for jobs matching your criteria. New opportunities will appear here as soon as they're found.
-          </p>
+          <h2 className="text-2xl font-bold text-blue-300">Loading Jobs</h2>
+          <p className="text-gray-400">Please wait while we load your job opportunities...</p>
         </div>
       </div>
     );
@@ -331,7 +332,67 @@ export function JobFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Jobs Found ({jobs.length})</h1>
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab('new')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'new'
+                ? 'bg-blue-600 text-white'
+                : 'bg-black/20 text-gray-400 hover:bg-black/30'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              New Job Opportunities
+              {isSearching && activeTab === 'new' && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('previous')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'previous'
+                ? 'bg-blue-600 text-white'
+                : 'bg-black/20 text-gray-400 hover:bg-black/30'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Previous Job Opportunities
+            </div>
+          </button>
+        </div>
+
+        <h1 className="text-4xl font-bold mb-8">
+          {activeTab === 'new' ? 'New Jobs Found' : 'Previous Jobs'} ({jobs.length})
+        </h1>
+
+        {jobs.length === 0 && (
+          <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-white/20 flex flex-col items-center gap-4 text-center">
+            {activeTab === 'new' && isSearching ? (
+              <>
+                <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
+                <h2 className="text-2xl font-bold text-blue-300">Searching for Jobs</h2>
+                <p className="text-gray-400 max-w-md">
+                  We're actively searching for jobs matching your criteria. 
+                  New opportunities will appear here as soon as they're found.
+                </p>
+              </>
+            ) : (
+              <>
+                <Building2 className="w-16 h-16 text-blue-500" />
+                <h2 className="text-2xl font-bold text-blue-300">No Jobs Found</h2>
+                <p className="text-gray-400 max-w-md">
+                  {activeTab === 'new' 
+                    ? "No new job opportunities found yet. Start a new job search to find matching positions."
+                    : "No previous job opportunities found. Start a new job search to see matching positions."}
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
         <div className="space-y-6">
           {jobs.map((job) => {
             const jobMatch = parseJobMatch(job.job_match);
@@ -375,7 +436,6 @@ export function JobFound() {
                     </div>
                   </div>
                   
-                  {/* Match Gauge moved to the right side */}
                   <div className="flex-shrink-0">
                     <MatchGauge
                       percentage={jobMatch?.match_data.overall_percentage ?? null}
@@ -478,7 +538,6 @@ export function JobFound() {
         </div>
       </div>
 
-      {/* Match Details Modal */}
       {selectedJobMatch && (
         <MatchDetails
           matchData={selectedJobMatch}
