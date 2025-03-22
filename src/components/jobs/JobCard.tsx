@@ -2,6 +2,7 @@ import React from 'react';
 import { Building2, MapPin, DollarSign, Globe, Star, Wand2, Loader2 } from 'lucide-react';
 import { MatchGauge } from '../job/MatchGauge';
 import { Job } from '../../types/job';
+import { parseJobMatch } from '../../utils/jobMatchUtils';
 
 interface JobCardProps {
   job: Job;
@@ -24,6 +25,10 @@ export function JobCard({
     if (!benefits) return [];
     return benefits.split(',').map(benefit => benefit.trim());
   };
+
+  // Parse job match data
+  const jobMatch = job.job_match ? parseJobMatch(job.job_match) : null;
+  const matchPercentage = jobMatch?.match_data.overall_percentage ?? null;
 
   return (
     <div className="bg-black/30 backdrop-blur-sm p-6 rounded-lg shadow-xl ring-1 ring-white/20 hover:ring-blue-500/30 transition-all">
@@ -63,8 +68,8 @@ export function JobCard({
         
         <div className="flex-shrink-0">
           <MatchGauge
-            percentage={job.job_match?.match_data?.overall_percentage ?? null}
-            onClick={onMatchClick}
+            percentage={matchPercentage}
+            onClick={jobMatch ? onMatchClick : undefined}
             label="Match Score"
           />
         </div>
