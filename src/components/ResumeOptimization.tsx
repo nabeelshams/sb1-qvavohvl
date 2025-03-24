@@ -439,6 +439,7 @@ export function ResumeOptimization() {
                 size="lg"
                 loading={atsLoading}
                 label="ATS Compatibility"
+                onClick={() => setActiveTab('ats')}
               />
             </div>
           </div>
@@ -460,3 +461,5 @@ export function ResumeOptimization() {
     </div>
   );
 }
+
+export default ResumeOptimization

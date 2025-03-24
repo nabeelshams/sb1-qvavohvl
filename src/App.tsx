@@ -9,7 +9,7 @@ import { CVDetailsForm } from './components/CVDetailsForm';
 import { JobSearchRule } from './components/JobSearchRule';
 import { JobFound } from './components/JobFound';
 import { Dashboard } from './components/Dashboard';
-import { ResumeOptimization } from './components/ResumeOptimization';
+import ResumeOptimization from './components/ResumeOptimization';
 import { supabase } from './lib/supabase';
 
 function App() {
