@@ -12,15 +12,7 @@ interface ActivitiesSectionProps {
 export function ActivitiesSection({ activities, onAdd, onUpdate, onRemove }: ActivitiesSectionProps) {
   return (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold">Activities & Achievements</h3>
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Add Activity
-        </button>
-      </div>
+      <h3 className="text-xl font-semibold mb-4">Activities & Achievements</h3>
       {activities.map((activity, index) => (
         <div key={index} className="bg-black/20 p-4 rounded mb-4">
           <div className="space-y-4">
@@ -47,6 +39,12 @@ export function ActivitiesSection({ activities, onAdd, onUpdate, onRemove }: Act
           </button>
         </div>
       ))}
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors mt-4"
+      >
+        <Plus className="w-4 h-4" /> Add Activity
+      </button>
     </section>
   );
 }

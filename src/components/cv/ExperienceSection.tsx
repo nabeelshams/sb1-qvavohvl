@@ -12,15 +12,7 @@ interface ExperienceSectionProps {
 export function ExperienceSection({ experiences, onAdd, onUpdate, onRemove }: ExperienceSectionProps) {
   return (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold">Experience</h3>
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Add Experience
-        </button>
-      </div>
+      <h3 className="text-xl font-semibold mb-4">Experience</h3>
       {experiences.map((exp, index) => (
         <div key={index} className="bg-black/20 p-4 rounded mb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -43,7 +35,7 @@ export function ExperienceSection({ experiences, onAdd, onUpdate, onRemove }: Ex
               placeholder="Start Date"
               value={exp.start_date}
               onChange={(e) => onUpdate(index, { ...exp, start_date: e.target.value })}
-              className="bg-black/20 p-3 rounded border border-white/10 focus:border-blue-500 outline-none"
+              className="bg-black/20 p-3 rounded border border-white/10 focus:border-blue-500 outline-none text-white [color-scheme:dark]"
             />
             <input
               type="text"
@@ -68,6 +60,12 @@ export function ExperienceSection({ experiences, onAdd, onUpdate, onRemove }: Ex
           </button>
         </div>
       ))}
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors mt-4"
+      >
+        <Plus className="w-4 h-4" /> Add Experience
+      </button>
     </section>
   );
 }

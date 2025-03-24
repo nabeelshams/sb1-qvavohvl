@@ -12,15 +12,7 @@ interface ReferencesSectionProps {
 export function ReferencesSection({ references, onAdd, onUpdate, onRemove }: ReferencesSectionProps) {
   return (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold">References</h3>
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Add Reference
-        </button>
-      </div>
+      <h3 className="text-xl font-semibold mb-4">References</h3>
       {references.map((ref, index) => (
         <div key={index} className="bg-black/20 p-4 rounded mb-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -54,6 +46,12 @@ export function ReferencesSection({ references, onAdd, onUpdate, onRemove }: Ref
           </button>
         </div>
       ))}
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors mt-4"
+      >
+        <Plus className="w-4 h-4" /> Add Reference
+      </button>
     </section>
   );
 }
