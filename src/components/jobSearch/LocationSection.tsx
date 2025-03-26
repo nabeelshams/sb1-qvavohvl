@@ -1,5 +1,5 @@
 import React from 'react';
-import { countries } from '../../utils/countries';
+import { allowedCountries } from '../../utils/allowedCountries';
 
 interface LocationSectionProps {
   country: string;
@@ -23,12 +23,12 @@ export function LocationSection({
         <select
           value={country}
           onChange={(e) => onCountryChange(e.target.value)}
-          className="w-full bg-black/20 p-3 rounded border border-white/10 focus:border-blue-500 outline-none"
+          className="w-full bg-black/20 p-3 rounded border border-white/10 focus:border-blue-500 outline-none text-white"
         >
-          <option value="">Select a country</option>
-          {countries.map((countryName) => (
-            <option key={countryName} value={countryName}>
-              {countryName}
+          <option value="" className="bg-gray-900">Select a country</option>
+          {allowedCountries.map(({ name }) => (
+            <option key={name} value={name} className="bg-gray-900">
+              {name}
             </option>
           ))}
         </select>
