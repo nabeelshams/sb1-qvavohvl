@@ -30,6 +30,19 @@ export function JobCard({
   const jobMatch = job.job_match ? parseJobMatch(job.job_match) : null;
   const matchPercentage = jobMatch?.match_data.overall_percentage ?? null;
 
+  const handleOptimizeClick = () => {
+    if (matchPercentage !== null && matchPercentage < 60) {
+      const proceed = window.confirm(
+        `The job match score (${matchPercentage.toFixed(1)}%) is below our recommended threshold of 60%.\n\n` +
+        `For best results, we recommend optimizing your resume for jobs with a higher match score. ` +
+        `This ensures the optimization process has enough relevant context to create an effective resume.\n\n` +
+        `Would you like to proceed anyway?`
+      );
+      if (!proceed) return;
+    }
+    onOptimize();
+  };
+
   return (
     <div className="bg-black/30 backdrop-blur-sm p-6 rounded-lg shadow-xl ring-1 ring-white/20 hover:ring-blue-500/30 transition-all">
       <div className="flex items-start justify-between gap-4">
@@ -137,7 +150,7 @@ export function JobCard({
           {isExpanded ? 'Collapse' : 'Expand'}
         </button>
         <button
-          onClick={onOptimize}
+          onClick={handleOptimizeClick}
           disabled={isOptimizing}
           className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
