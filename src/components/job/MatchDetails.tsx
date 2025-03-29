@@ -11,8 +11,9 @@ interface MatchDetailsProps {
 export function MatchDetails({ matchData, onClose }: MatchDetailsProps) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6 space-y-6">
+          {/* Header with close button */}
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">Match Details</h3>
             <button
@@ -35,105 +36,97 @@ export function MatchDetails({ matchData, onClose }: MatchDetailsProps) {
             </p>
           </div>
 
-          {/* Individual Match Categories */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center">
-              <MatchGauge 
-                percentage={matchData.match_data.skills_match}
-                label="Skills"
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <MatchGauge 
-                percentage={matchData.match_data.experience_match}
-                label="Experience"
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <MatchGauge 
-                percentage={matchData.match_data.education_match}
-                label="Education"
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <MatchGauge 
-                percentage={matchData.match_data.location_match}
-                label="Location"
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <MatchGauge 
-                percentage={matchData.match_data.salary_match}
-                label="Salary"
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <MatchGauge 
-                percentage={matchData.match_data.job_type_match}
-                label="Job Type"
-              />
-            </div>
-          </div>
-
-          {/* Detailed Analysis */}
-          <div className="space-y-6">
-            {/* Skills Analysis */}
-            <div className="space-y-3">
-              <h4 className="font-medium">Skills Analysis</h4>
-              <p className="text-sm text-gray-400">{matchData.rationale.skills}</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h5 className="text-sm text-green-400 mb-2">Matched Skills</h5>
-                  <div className="space-y-1">
-                    {matchData.skills_details.matched.map((skill, index) => (
-                      <div key={index} className="text-sm bg-green-900/30 px-2 py-1 rounded">
-                        {skill}
-                      </div>
-                    ))}
-                  </div>
+          {/* Match Categories Grid */}
+          <div className="grid grid-cols-1 gap-6">
+            {/* Skills Match */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center">
+                  <MatchGauge 
+                    percentage={matchData.match_data.skills_match}
+                  />
                 </div>
-                <div>
-                  <h5 className="text-sm text-red-400 mb-2">Missing Skills</h5>
-                  <div className="space-y-1">
-                    {matchData.skills_details.missing.map((skill, index) => (
-                      <div key={index} className="text-sm bg-red-900/30 px-2 py-1 rounded">
-                        {skill}
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-blue-400">Skills Match</h4>
+                  <p className="text-sm text-gray-400">{matchData.rationale.skills}</p>
                 </div>
               </div>
             </div>
 
-            {/* Experience Analysis */}
-            <div className="space-y-3">
-              <h4 className="font-medium">Experience Analysis</h4>
-              <p className="text-sm text-gray-400">{matchData.rationale.experience}</p>
-              <div className="bg-gray-800/50 p-4 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span>Required Experience</span>
-                  <span>{matchData.experience_details.years_required} years</span>
+            {/* Experience Match */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center">
+                  <MatchGauge 
+                    percentage={matchData.match_data.experience_match}
+                  />
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span>Your Experience</span>
-                  <span>{matchData.experience_details.years_matched} years</span>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-blue-400">Experience Match</h4>
+                  <p className="text-sm text-gray-400">{matchData.rationale.experience}</p>
                 </div>
               </div>
             </div>
 
-            {/* Other Match Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <h4 className="font-medium">Education Match</h4>
-                <p className="text-sm text-gray-400">{matchData.rationale.education}</p>
+            {/* Education Match */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center">
+                  <MatchGauge 
+                    percentage={matchData.match_data.education_match}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-blue-400">Education Match</h4>
+                  <p className="text-sm text-gray-400">{matchData.rationale.education}</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">Location Match</h4>
-                <p className="text-sm text-gray-400">{matchData.rationale.location}</p>
+            </div>
+
+            {/* Location Match */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center">
+                  <MatchGauge 
+                    percentage={matchData.match_data.location_match}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-blue-400">Location Match</h4>
+                  <p className="text-sm text-gray-400">{matchData.rationale.location}</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">Salary Match</h4>
-                <p className="text-sm text-gray-400">{matchData.rationale.salary}</p>
+            </div>
+
+            {/* Salary Match */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center">
+                  <MatchGauge 
+                    percentage={matchData.match_data.salary_match}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-blue-400">Salary Match</h4>
+                  <p className="text-sm text-gray-400">{matchData.rationale.salary}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Job Type Match */}
+            <div className="bg-black/20 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center justify-center">
+                  <MatchGauge 
+                    percentage={matchData.match_data.job_type_match}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-semibold text-blue-400">Job Type Match</h4>
+                  <p className="text-sm text-gray-400">
+                    {/* Leave empty as there's no rationale for job type */}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
