@@ -9,6 +9,7 @@ import { CVDetailsForm } from './components/CVDetailsForm';
 import { JobSearchRule } from './components/JobSearchRule';
 import { JobFound } from './components/JobFound';
 import { Dashboard } from './components/Dashboard';
+import { OptimizedResumes } from './components/OptimizedResumes';
 import ResumeOptimization from './components/ResumeOptimization';
 import { supabase } from './lib/supabase';
 
@@ -71,6 +72,7 @@ function App() {
         <Route path="/cv-details/:cvUrl" element={<CVDetailsForm />} />
         <Route path="/job-search-rule" element={<JobSearchRule isNewUser={isNewUser} />} />
         <Route path="/jobs-found" element={<JobFound />} />
+        <Route path="/optimized-resumes" element={<OptimizedResumes />} />
         <Route path="/resume-optimization/:userId/:jobId/:optimizationId" element={<ResumeOptimization />} />
         <Route path="/" element={
           isNewUser ? <Navigate to="/upload-cv" replace /> : <Navigate to="/dashboard" replace />
