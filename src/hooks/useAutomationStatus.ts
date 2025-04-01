@@ -9,7 +9,7 @@ interface UseAutomationStatusProps {
 export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<'running' | 'completed' | 'failed' | null>(null);
+  const [status, setStatus] = useState<'completed' | null>(null);
   const [totalJobs, setTotalJobs] = useState<number>(0);
 
   useEffect(() => {
@@ -18,50 +18,67 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
     let pollInterval: NodeJS.Timeout | null = null;
     const POLL_INTERVAL = 2000; // 2 seconds
 
+    const cleanup = () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      if (subscription) {
+        supabase.removeChannel(subscription);
+        subscription = null;
+      }
+    };
+
+    const handleCompletion = (jobCount: number) => {
+      if (!isSubscribed) return;
+      
+      setStatus('completed');
+      setLoading(false);
+      setTotalJobs(jobCount);
+      cleanup();
+      
+      if (onComplete) {
+        onComplete(jobCount);
+      }
+    };
+
     const fetchStatus = async () => {
       if (!runId || !isSubscribed) return;
 
       try {
-        const { data, error } = await supabase
+        // Check if automation status record exists
+        const { data: automationData, error: automationError } = await supabase
           .from('automation_status')
-          .select('total_jobs')
+          .select('*')
           .eq('run_id', runId)
-          .maybeSingle();
+          .single();
 
-        if (error) throw error;
-
-        if (data) {
-          console.log('Automation status update:', data); // Debug log
-          const currentTotalJobs = data.total_jobs || 0;
-          setTotalJobs(currentTotalJobs);
-          
-          // Determine status based on total_jobs
-          const newStatus = currentTotalJobs > 0 ? 'running' : 'completed';
-          setStatus(newStatus);
-          setLoading(false);
-
-          if (newStatus === 'completed') {
-            console.log('Automation completed with total jobs:', currentTotalJobs); // Debug log
-            if (onComplete) {
-              onComplete(currentTotalJobs);
-            }
-
-            // Stop polling and subscription
-            if (pollInterval) {
-              clearInterval(pollInterval);
-              pollInterval = null;
-            }
-            if (subscription) {
-              supabase.removeChannel(subscription);
-              subscription = null;
-            }
+        if (automationError) {
+          // If record not found, automation hasn't started yet
+          if (automationError.code === 'PGRST116') {
+            return;
           }
+          throw automationError;
+        }
+
+        // If automation status record exists, get total jobs count
+        if (automationData) {
+          const { data: jobsData, error: jobsError } = await supabase
+            .from('jobs_found')
+            .select('job_id')
+            .eq('run_id', runId);
+
+          if (jobsError) throw jobsError;
+
+          const currentTotalJobs = jobsData?.length || 0;
+          handleCompletion(currentTotalJobs);
         }
       } catch (err: any) {
-        console.error('Error fetching automation status:', err); // Debug log
+        console.error('Error fetching status:', err);
         if (isSubscribed) {
           setError(err.message);
           setLoading(false);
+          cleanup();
         }
       }
     };
@@ -80,31 +97,16 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
           async (payload) => {
             if (!isSubscribed) return;
 
-            const data = payload.new as any;
-            console.log('Real-time automation status update:', data); // Debug log
-            
-            const currentTotalJobs = data.total_jobs || 0;
-            setTotalJobs(currentTotalJobs);
-            
-            // Determine status based on total_jobs
-            const newStatus = currentTotalJobs > 0 ? 'running' : 'completed';
-            setStatus(newStatus);
+            // When automation status record is created or updated
+            if (payload.new) {
+              // Get total jobs count
+              const { data: jobsData } = await supabase
+                .from('jobs_found')
+                .select('job_id')
+                .eq('run_id', runId);
 
-            if (newStatus === 'completed') {
-              console.log('Real-time completion with total jobs:', currentTotalJobs); // Debug log
-              if (onComplete) {
-                onComplete(currentTotalJobs);
-              }
-
-              // Stop polling and subscription
-              if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-              }
-              if (subscription) {
-                supabase.removeChannel(subscription);
-                subscription = null;
-              }
+              const currentTotalJobs = jobsData?.length || 0;
+              handleCompletion(currentTotalJobs);
             }
           }
         )
@@ -112,21 +114,16 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
     };
 
     if (runId) {
-      console.log('Starting automation status monitoring for run_id:', runId); // Debug log
+      console.log('Starting automation monitoring for run_id:', runId);
       setupRealtimeSubscription();
       fetchStatus();
       pollInterval = setInterval(fetchStatus, POLL_INTERVAL);
     }
 
     return () => {
-      console.log('Cleaning up automation status monitoring'); // Debug log
+      console.log('Cleaning up automation monitoring');
       isSubscribed = false;
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
+      cleanup();
     };
   }, [runId, onComplete]);
 
