@@ -11,6 +11,7 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'completed' | null>(null);
   const [totalJobs, setTotalJobs] = useState<number>(0);
+  const [hasNotified, setHasNotified] = useState(false);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -30,11 +31,12 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
     };
 
     const handleCompletion = (jobCount: number) => {
-      if (!isSubscribed) return;
+      if (!isSubscribed || hasNotified) return;
       
       setStatus('completed');
       setLoading(false);
       setTotalJobs(jobCount);
+      setHasNotified(true);
       cleanup();
       
       if (onComplete) {
@@ -43,7 +45,7 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
     };
 
     const fetchStatus = async () => {
-      if (!runId || !isSubscribed) return;
+      if (!runId || !isSubscribed || hasNotified) return;
 
       try {
         // Check if automation status record exists
@@ -95,7 +97,7 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
             filter: `run_id=eq.${runId}`
           },
           async (payload) => {
-            if (!isSubscribed) return;
+            if (!isSubscribed || hasNotified) return;
 
             // When automation status record is created or updated
             if (payload.new) {
@@ -113,7 +115,7 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
         .subscribe();
     };
 
-    if (runId) {
+    if (runId && !hasNotified) {
       console.log('Starting automation monitoring for run_id:', runId);
       setupRealtimeSubscription();
       fetchStatus();
@@ -125,7 +127,7 @@ export function useAutomationStatus({ runId, onComplete }: UseAutomationStatusPr
       isSubscribed = false;
       cleanup();
     };
-  }, [runId, onComplete]);
+  }, [runId, onComplete, hasNotified]);
 
   return { status, totalJobs, loading, error };
 }
