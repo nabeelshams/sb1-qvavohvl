@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthForm } from './components/AuthForm';
 import { ContactForm } from './components/ContactForm';
@@ -13,29 +13,10 @@ import { OptimizedResumes } from './components/OptimizedResumes';
 import ResumeOptimization from './components/ResumeOptimization';
 import { supabase } from './lib/supabase';
 
-function App() {
+function AppContent() {
   const [session, setSession] = useState<any>(null);
   const [isNewUser, setIsNewUser] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        checkIfNewUser(session.user.id);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        checkIfNewUser(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const navigate = useNavigate();
 
   const checkIfNewUser = async (userId: string) => {
     try {
@@ -57,12 +38,43 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        checkIfNewUser(session.user.id);
+        // Redirect to dashboard or upload-cv on login
+        if (window.location.pathname === '/') {
+          navigate(isNewUser ? '/upload-cv' : '/dashboard', { replace: true });
+        }
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        checkIfNewUser(session.user.id);
+        // Redirect to dashboard or upload-cv on login
+        if (window.location.pathname === '/') {
+          navigate(isNewUser ? '/upload-cv' : '/dashboard', { replace: true });
+        }
+      } else {
+        // On logout, redirect to root
+        navigate('/', { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, isNewUser]);
+
   if (!session) {
     return <AuthForm />;
   }
 
   return (
-    <BrowserRouter>
+    <>
       <Toaster position="top-right" />
       <FloatingMenu />
       <Sidebar />
@@ -79,6 +91,14 @@ function App() {
         } />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

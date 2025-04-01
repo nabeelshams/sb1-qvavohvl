@@ -7,9 +7,11 @@ import { JobList } from './jobs/JobList';
 import { LoadingState } from './jobs/LoadingState';
 import { EmptyState } from './jobs/EmptyState';
 import { MatchDetails } from './job/MatchDetails';
+import { NoJobsFoundModal } from './job/NoJobsFoundModal';
 import { JobMatchData } from '../types/jobMatch';
 import { Job } from '../types/job';
 import { useJobSearch } from '../hooks/useJobSearch';
+import { useAutomationStatus } from '../hooks/useAutomationStatus';
 import { uuidv4 } from '../utils/uuid';
 
 type TabType = 'new' | 'previous';
@@ -25,6 +27,7 @@ export function JobFound() {
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
   const [hasFetchedPrevious, setHasFetchedPrevious] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showNoJobsModal, setShowNoJobsModal] = useState(false);
 
   useEffect(() => {
     const runId = location.state?.runId || new URLSearchParams(location.search).get('runId');
@@ -58,6 +61,15 @@ export function JobFound() {
     activeTab,
     currentRunId,
     hasFetchedPrevious
+  });
+
+  const { status: automationStatus } = useAutomationStatus({
+    runId: currentRunId,
+    onComplete: (totalJobs) => {
+      if (totalJobs === 0) {
+        setShowNoJobsModal(true);
+      }
+    }
   });
 
   const handleOptimizeResume = async (job: Job) => {
@@ -147,7 +159,7 @@ export function JobFound() {
               <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
                 New Job Opportunities
-                {isSearching && activeTab === 'new' && (
+                {isSearching && activeTab === 'new' && automationStatus !== 'completed' && (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 )}
               </div>
@@ -182,7 +194,10 @@ export function JobFound() {
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
           </div>
         ) : jobs.length === 0 ? (
-          <EmptyState activeTab={activeTab} isSearching={isSearching} />
+          <EmptyState 
+            activeTab={activeTab} 
+            isSearching={isSearching && automationStatus !== 'completed'} 
+          />
         ) : (
           <JobList
             jobs={jobs}
@@ -199,6 +214,10 @@ export function JobFound() {
             matchData={selectedJobMatch}
             onClose={() => setSelectedJobMatch(null)}
           />
+        )}
+
+        {showNoJobsModal && (
+          <NoJobsFoundModal onClose={() => setShowNoJobsModal(false)} />
         )}
       </div>
     </div>

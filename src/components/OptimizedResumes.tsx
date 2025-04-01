@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import pdfMake from '../lib/pdfmake';
 import htmlToPdfmake from 'html-to-pdfmake';
-import { Document, Packer, Paragraph } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 
 interface OptimizedResume {
   id: string;
@@ -29,7 +29,6 @@ export function OptimizedResumes() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Fetch optimized resumes
       const { data: optimizedResumes, error: resumesError } = await supabase
         .from('optimized_resumes')
         .select('id, job_id, optimized_resume, created_at')
@@ -38,7 +37,6 @@ export function OptimizedResumes() {
 
       if (resumesError) throw resumesError;
 
-      // Fetch job titles for each resume
       const resumesWithTitles = await Promise.all(
         (optimizedResumes || []).map(async (resume) => {
           const { data: jobData } = await supabase
@@ -47,10 +45,13 @@ export function OptimizedResumes() {
             .eq('job_id', resume.job_id)
             .single();
 
-          return {
+          const cleanedResume = {
             ...resume,
+            optimized_resume: resume.optimized_resume.replace(/```html\n?|\n?```/g, ''),
             job_title: jobData?.title || 'Unknown Job'
           };
+
+          return cleanedResume;
         })
       );
 
@@ -116,18 +117,114 @@ export function OptimizedResumes() {
     }
   };
 
+  const parseHtmlToDocxElements = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const elements: (Paragraph | any)[] = [];
+
+    const processNode = (node: Node): any[] => {
+      const result: any[] = [];
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.textContent?.trim()) {
+          return [new TextRun(node.textContent)];
+        }
+        return [];
+      }
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as Element;
+        const style = window.getComputedStyle(element);
+
+        switch (element.tagName.toLowerCase()) {
+          case 'h1':
+            return [new Paragraph({
+              text: element.textContent || '',
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: 240, after: 120 } // 24pt before, 12pt after
+            })];
+          case 'h2':
+            return [new Paragraph({
+              text: element.textContent || '',
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 200, after: 100 } // 20pt before, 10pt after
+            })];
+          case 'h3':
+            return [new Paragraph({
+              text: element.textContent || '',
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 160, after: 80 } // 16pt before, 8pt after
+            })];
+          case 'p':
+            const runs: TextRun[] = [];
+            element.childNodes.forEach(child => {
+              if (child.nodeType === Node.TEXT_NODE) {
+                runs.push(new TextRun(child.textContent || ''));
+              } else if (child.nodeType === Node.ELEMENT_NODE) {
+                const childElement = child as Element;
+                switch (childElement.tagName.toLowerCase()) {
+                  case 'strong':
+                  case 'b':
+                    runs.push(new TextRun({
+                      text: childElement.textContent || '',
+                      bold: true
+                    }));
+                    break;
+                  case 'em':
+                  case 'i':
+                    runs.push(new TextRun({
+                      text: childElement.textContent || '',
+                      italics: true
+                    }));
+                    break;
+                }
+              }
+            });
+            return [new Paragraph({
+              children: runs,
+              spacing: { after: 120 } // 12pt after paragraph
+            })];
+          case 'ul':
+          case 'ol':
+            const listItems: Paragraph[] = [];
+            element.querySelectorAll('li').forEach((li, index) => {
+              listItems.push(new Paragraph({
+                children: [new TextRun(`• ${li.textContent || ''}`)],
+                spacing: { before: 60, after: 60 }, // 6pt spacing
+                indent: { left: 720 } // 0.5 inch indent (720 twips)
+              }));
+            });
+            return listItems;
+          case 'div':
+            // Process div children recursively
+            element.childNodes.forEach(child => {
+              result.push(...processNode(child));
+            });
+            return result;
+        }
+
+        // Process child nodes recursively
+        element.childNodes.forEach(child => {
+          result.push(...processNode(child));
+        });
+      }
+
+      return result;
+    };
+
+    return processNode(doc.body);
+  };
+
   const downloadAsDoc = async (resume: OptimizedResume) => {
     try {
       setDownloading({ id: resume.id, format: 'doc' });
 
+      const docElements = parseHtmlToDocxElements(resume.optimized_resume);
+
       const doc = new Document({
         sections: [{
           properties: {},
-          children: [
-            new Paragraph({
-              text: resume.optimized_resume.replace(/<[^>]+>/g, '')
-            })
-          ]
+          children: docElements
         }]
       });
 
@@ -163,7 +260,7 @@ export function OptimizedResumes() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Optimized Resumes</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">Optimized Resumes</h1>
         
         {resumes.length === 0 ? (
           <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg text-center">
@@ -225,7 +322,7 @@ export function OptimizedResumes() {
                 </div>
                 
                 {expandedResumes.has(resume.id) && (
-                  <div className="mt-6 prose prose-invert max-w-none">
+                  <div className="mt-6 prose prose-invert max-w-none [&_h1]:!text-white [&_h2]:!text-white [&_h3]:!text-white">
                     <div dangerouslySetInnerHTML={{ __html: resume.optimized_resume }} />
                   </div>
                 )}
