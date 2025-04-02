@@ -22,16 +22,15 @@ export function Editor({ content, onChange, onEditorReady }: EditorProps) {
     ],
     content: content || '<p></p>',
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      onChange(html);
     },
-  }, [content]); // Add content as a dependency
-
-  // Update editor content when prop changes
-  useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content || '<p></p>');
+    editorProps: {
+      attributes: {
+        class: 'prose prose-invert max-w-none min-h-[500px] focus:outline-none'
+      }
     }
-  }, [editor, content]);
+  });
 
   // Notify parent when editor is ready
   useEffect(() => {
@@ -39,6 +38,13 @@ export function Editor({ content, onChange, onEditorReady }: EditorProps) {
       onEditorReady(editor);
     }
   }, [editor, onEditorReady]);
+
+  // Update content only when it changes externally
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content || '<p></p>', false);
+    }
+  }, [editor, content]);
 
   if (!editor) {
     return null;
@@ -109,10 +115,7 @@ export function Editor({ content, onChange, onEditorReady }: EditorProps) {
       </div>
 
       {/* Editor Content */}
-      <EditorContent 
-        editor={editor} 
-        className="prose prose-invert max-w-none min-h-[500px] focus:outline-none"
-      />
+      <EditorContent editor={editor} />
     </div>
   );
 }
