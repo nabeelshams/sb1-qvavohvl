@@ -141,19 +141,19 @@ export function OptimizedResumes() {
             return [new Paragraph({
               text: element.textContent || '',
               heading: HeadingLevel.HEADING_1,
-              spacing: { before: 240, after: 120 } // 24pt before, 12pt after
+              spacing: { before: 240, after: 120 }
             })];
           case 'h2':
             return [new Paragraph({
               text: element.textContent || '',
               heading: HeadingLevel.HEADING_2,
-              spacing: { before: 200, after: 100 } // 20pt before, 10pt after
+              spacing: { before: 200, after: 100 }
             })];
           case 'h3':
             return [new Paragraph({
               text: element.textContent || '',
               heading: HeadingLevel.HEADING_3,
-              spacing: { before: 160, after: 80 } // 16pt before, 8pt after
+              spacing: { before: 160, after: 80 }
             })];
           case 'p':
             const runs: TextRun[] = [];
@@ -182,7 +182,7 @@ export function OptimizedResumes() {
             });
             return [new Paragraph({
               children: runs,
-              spacing: { after: 120 } // 12pt after paragraph
+              spacing: { after: 120 }
             })];
           case 'ul':
           case 'ol':
@@ -190,20 +190,18 @@ export function OptimizedResumes() {
             element.querySelectorAll('li').forEach((li, index) => {
               listItems.push(new Paragraph({
                 children: [new TextRun(`• ${li.textContent || ''}`)],
-                spacing: { before: 60, after: 60 }, // 6pt spacing
-                indent: { left: 720 } // 0.5 inch indent (720 twips)
+                spacing: { before: 60, after: 60 },
+                indent: { left: 720 }
               }));
             });
             return listItems;
           case 'div':
-            // Process div children recursively
             element.childNodes.forEach(child => {
               result.push(...processNode(child));
             });
             return result;
         }
 
-        // Process child nodes recursively
         element.childNodes.forEach(child => {
           result.push(...processNode(child));
         });
@@ -259,7 +257,7 @@ export function OptimizedResumes() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto ml-20">
         <h1 className="text-4xl font-bold text-white mb-8">Optimized Resumes</h1>
         
         {resumes.length === 0 ? (

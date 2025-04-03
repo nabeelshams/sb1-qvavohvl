@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { Briefcase, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { supabase } from '../lib/supabase';
 import { JobList } from './jobs/JobList';
 import { LoadingState } from './jobs/LoadingState';
 import { EmptyState } from './jobs/EmptyState';
 import { MatchDetails } from './job/MatchDetails';
-import { NoJobsFoundModal } from './job/NoJobsFoundModal';
 import { JobMatchData } from '../types/jobMatch';
 import { Job } from '../types/job';
 import { useJobSearch } from '../hooks/useJobSearch';
@@ -138,7 +137,6 @@ export function JobFound() {
     });
   };
 
-  // Show loading state only during initial auth check
   if (authLoading) {
     return <LoadingState />;
   }
@@ -214,10 +212,6 @@ export function JobFound() {
             matchData={selectedJobMatch}
             onClose={() => setSelectedJobMatch(null)}
           />
-        )}
-
-        {showNoJobsModal && (
-          <NoJobsFoundModal onClose={() => setShowNoJobsModal(false)} />
         )}
       </div>
     </div>

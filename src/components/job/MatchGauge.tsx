@@ -14,7 +14,7 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label, loading = 
   const height = isLarge ? 160 : 130;
   
   // Calculate the angle for the needle based on the percentage
-  const angle = percentage ? (percentage * 180) / 100 - 90 : -90;
+  const angle = percentage !== null && !isNaN(percentage) ? (percentage * 180) / 100 - 90 : -90;
   
   // Determine color based on percentage
   const getGradientId = () => 'gauge-gradient';
@@ -50,7 +50,7 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label, loading = 
         />
         
         {/* Percentage arc */}
-        {percentage !== null && !loading && (
+        {percentage !== null && !isNaN(percentage) && !loading && (
           <path
             d={`M 20 ${height - 10} A ${width / 2 - 20} ${width / 2 - 20} 0 0 1 ${width - 20} ${height - 10}`}
             fill="none"
@@ -80,7 +80,7 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label, loading = 
         )}
         
         {/* Needle */}
-        {percentage !== null && !loading && (
+        {percentage !== null && !isNaN(percentage) && !loading && (
           <g transform={`translate(${width / 2}, ${height - 10})`}>
             <line
               x1="0"
@@ -111,7 +111,7 @@ export function MatchGauge({ percentage, size = 'sm', onClick, label, loading = 
           <span className={`text-blue-400 font-medium ${isLarge ? 'text-2xl' : 'text-xl'}`}>
             Processing
           </span>
-        ) : percentage !== null ? (
+        ) : percentage !== null && !isNaN(percentage) ? (
           <span className={`font-semibold ${isLarge ? 'text-3xl' : 'text-2xl'}`}>
             {Math.round(percentage)}%
           </span>

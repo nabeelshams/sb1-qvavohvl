@@ -3,12 +3,14 @@ import { supabase } from '../lib/supabase';
 import { DashboardStats } from './dashboard/DashboardStats';
 import { MatchDistributionChart } from './dashboard/MatchDistributionChart';
 import { SalaryDistributionChart } from './dashboard/SalaryDistributionChart';
+import { CityDistributionChart } from './dashboard/CityDistributionChart';
 import { LatestJobs } from './dashboard/LatestJobs';
 import { ProfileCompletion } from './dashboard/ProfileCompletion';
 import { SkillsAnalysis } from './dashboard/SkillsAnalysis';
 import { LoadingState } from './dashboard/LoadingState';
 import { ErrorState } from './dashboard/ErrorState';
 import { DashboardStats as Stats } from '../types/dashboard';
+import { parseJobMatch } from '../utils/jobMatchUtils';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -29,10 +31,11 @@ export default function Dashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Fetch jobs data
+      // Fetch jobs data - only for the current user's runs
       const { data: jobsData, error: jobsError } = await supabase
         .from('jobs_found')
         .select('*')
+        .eq('id', user.id)
         .order('created_at', { ascending: false });
 
       if (jobsError) throw jobsError;
@@ -112,11 +115,17 @@ export default function Dashboard() {
 
       jobsData?.forEach(job => {
         // Match distribution
-        const matchScore = job.job_match?.match_data?.overall_percentage || 0;
-        if (matchScore >= 80) matchDistribution.excellent++;
-        else if (matchScore >= 60) matchDistribution.good++;
-        else if (matchScore >= 40) matchDistribution.fair++;
-        else matchDistribution.poor++;
+        if (job.job_match) {
+          const matchData = parseJobMatch(job.job_match);
+          const matchScore = matchData?.match_data.overall_percentage;
+          
+          if (matchScore !== null && !isNaN(matchScore)) {
+            if (matchScore >= 80) matchDistribution.excellent++;
+            else if (matchScore >= 60) matchDistribution.good++;
+            else if (matchScore >= 40) matchDistribution.fair++;
+            else matchDistribution.poor++;
+          }
+        }
 
         // Location stats
         const location = job.city || 'Unknown';
@@ -222,7 +231,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto ml-20 space-y-8">
         <DashboardStats 
           totalJobs={stats.totalJobs}
           optimizedResumes={stats.optimizedResumes}
@@ -235,10 +244,13 @@ export default function Dashboard() {
           <SalaryDistributionChart data={stats.salaryRanges} />
         </div>
 
-        <SkillsAnalysis 
-          requiredSkills={requiredSkills}
-          userSkills={userSkills}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CityDistributionChart data={stats.locationStats} />
+          <SkillsAnalysis 
+            requiredSkills={requiredSkills}
+            userSkills={userSkills}
+          />
+        </div>
 
         <LatestJobs jobs={stats.latestJobs} />
 

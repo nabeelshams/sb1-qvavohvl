@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, HelpCircle, LayoutDashboard, Upload, Briefcase, Sliders, Files } from 'lucide-react';
+import { FileText, FileCheck, HelpCircle, LayoutDashboard, Upload, Briefcase, Sliders } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -85,7 +85,7 @@ export function Sidebar() {
             onClick={() => navigate('/optimized-resumes')}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
           >
-            <Files className="w-5 h-5 text-white/80" />
+            <FileCheck className="w-5 h-5 text-white/80" />
             <span className="absolute left-full ml-2 px-2 py-1 bg-black/50 rounded text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
               Optimized Resumes
             </span>
