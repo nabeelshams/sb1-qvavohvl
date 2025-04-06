@@ -7,6 +7,7 @@ import { CityDistributionChart } from './dashboard/CityDistributionChart';
 import { LatestJobs } from './dashboard/LatestJobs';
 import { ProfileCompletion } from './dashboard/ProfileCompletion';
 import { SkillsAnalysis } from './dashboard/SkillsAnalysis';
+import { QuickJobSearch } from './dashboard/QuickJobSearch';
 import { LoadingState } from './dashboard/LoadingState';
 import { ErrorState } from './dashboard/ErrorState';
 import { DashboardStats as Stats } from '../types/dashboard';
@@ -165,14 +166,16 @@ export default function Dashboard() {
         .single();
 
       const requiredFields = [
-        'full_name',
-        'email',
-        'phone_number',
-        'summary',
-        'experience',
-        'education',
-        'skills'
-      ];
+  'full_name',
+  'email',
+  'phone_number',
+  'summary',
+  'website_or_portfolio',
+  'experience',
+  'education', 'skills',
+  'certifications',
+  'activities'
+];
 
       const missingFields = requiredFields.filter(field => {
         if (!profileData?.[field]) return true;
@@ -232,12 +235,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
       <div className="max-w-7xl mx-auto ml-20 space-y-8">
+        <QuickJobSearch />
+        
         <DashboardStats 
-          totalJobs={stats.totalJobs}
-          optimizedResumes={stats.optimizedResumes}
-          averageAtsScore={stats.averageAtsScore}
-          profileCompletion={stats.profileCompletion.percentage}
-        />
+  totalJobs={stats.totalJobs}
+  optimizedResumes={stats.optimizedResumes}
+  averageAtsScore={stats.averageAtsScore}
+  profileCompletion={stats.profileCompletion.percentage}
+  missingFields={stats.profileCompletion.missingFields}
+/>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <MatchDistributionChart data={stats.matchDistribution} />

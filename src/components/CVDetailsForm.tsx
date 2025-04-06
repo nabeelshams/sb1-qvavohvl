@@ -14,6 +14,7 @@ import { LanguagesSection } from './cv/LanguagesSection';
 import { ActivitiesSection } from './cv/ActivitiesSection';
 import { ReferencesSection } from './cv/ReferencesSection';
 import { ValidationChecklist } from './cv/ValidationChecklist';
+import { SaveConfirmationModal } from './cv/SaveConfirmationModal';
 
 const defaultFormData: CVDetails = {
   full_name: '',
@@ -41,6 +42,8 @@ export function CVDetailsForm() {
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const [isDataPopulated, setIsDataPopulated] = useState(false);
   const [formData, setFormData] = useState<CVDetails>(defaultFormData);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [missingRecommended, setMissingRecommended] = useState<string[]>([]);
 
   useEffect(() => {
     const loadCVDetails = async () => {
@@ -130,40 +133,41 @@ export function CVDetailsForm() {
   };
 
   const checkRecommendedFields = () => {
-    const missingRecommended = [];
+    const missing = [];
     
     if (!formData.website_or_portfolio.trim()) {
-      missingRecommended.push('Website/Portfolio');
+      missing.push('Website/Portfolio');
     }
     if (formData.experience.length === 0) {
-      missingRecommended.push('Work Experience');
+      missing.push('Work Experience');
     }
     if (formData.certifications.length === 0) {
-      missingRecommended.push('Certifications');
+      missing.push('Certifications');
     }
     if (formData.activities.length === 0) {
-      missingRecommended.push('Activities & Achievements');
+      missing.push('Activities & Achievements');
     }
 
-    return missingRecommended;
+    return missing;
   };
 
   const handleSave = async () => {
+    if (!validateMandatoryFields()) {
+      return;
+    }
+
+    const missing = checkRecommendedFields();
+    if (missing.length > 0) {
+      setMissingRecommended(missing);
+      setShowSaveModal(true);
+      return;
+    }
+
+    await saveDetails();
+  };
+
+  const saveDetails = async () => {
     try {
-      if (!validateMandatoryFields()) {
-        return;
-      }
-
-      const missingRecommended = checkRecommendedFields();
-      if (missingRecommended.length > 0) {
-        const confirmed = window.confirm(
-          `The following recommended sections are incomplete:\n\n${missingRecommended.join('\n')}\n\nThese sections can improve your resume's effectiveness. Do you want to continue anyway?`
-        );
-        if (!confirmed) {
-          return;
-        }
-      }
-
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -194,197 +198,211 @@ export function CVDetailsForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
-      <div className="max-w-6xl mx-auto">
-        {isNew ? (
-          <>
-            <div className="text-center mb-8">
-              <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
-                Step 2 of 3
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-gray-900 to-black text-white p-8 pt-24">
+        <div className="max-w-6xl mx-auto">
+          {isNew ? (
+            <>
+              <div className="text-center mb-8">
+                <div className="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-6">
+                  Step 2 of 3
+                </div>
+                <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+                  Review Your CV Details
+                </h1>
+                <p className="text-gray-400 max-w-2xl mx-auto">
+                  We've analyzed your CV and extracted the key information. Please review and enhance these details to ensure we find the most relevant job opportunities for you.
+                </p>
               </div>
-              <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-                Review Your CV Details
-              </h1>
-              <p className="text-gray-400 max-w-2xl mx-auto">
-                We've analyzed your CV and extracted the key information. Please review and enhance these details to ensure we find the most relevant job opportunities for you.
-              </p>
-            </div>
 
-            {/* Steps Overview */}
-            <div className="grid grid-cols-3 gap-6 mb-12">
-              <div className="p-4 bg-black/20 rounded-lg border border-blue-500/20">
-                <div className="text-blue-400 font-bold mb-2">Step 1</div>
-                <p className="text-sm text-gray-400">Upload CV</p>
-                <div className="mt-2 w-full h-1 bg-blue-500 rounded-full" />
+              {/* Steps Overview */}
+              <div className="grid grid-cols-3 gap-6 mb-12">
+                <div className="p-4 bg-black/20 rounded-lg border border-blue-500/20">
+                  <div className="text-blue-400 font-bold mb-2">Step 1</div>
+                  <p className="text-sm text-gray-400">Upload CV</p>
+                  <div className="mt-2 w-full h-1 bg-blue-500 rounded-full" />
+                </div>
+                <div className="p-4 bg-black/20 rounded-lg border border-purple-500/20">
+                  <div className="text-purple-400 font-bold mb-2">Step 2</div>
+                  <p className="text-sm text-gray-400">Review and enhance CV details</p>
+                  <div className="mt-2 w-full h-1 bg-purple-500/50 rounded-full animate-pulse" />
+                </div>
+                <div className="p-4 bg-black/20 rounded-lg border border-pink-500/20">
+                  <div className="text-pink-400 font-bold mb-2">Step 3</div>
+                  <p className="text-sm text-gray-400">Set your job preferences</p>
+                  <div className="mt-2 w-full h-1 bg-gray-700 rounded-full" />
+                </div>
               </div>
-              <div className="p-4 bg-black/20 rounded-lg border border-purple-500/20">
-                <div className="text-purple-400 font-bold mb-2">Step 2</div>
-                <p className="text-sm text-gray-400">Review and enhance CV details</p>
-                <div className="mt-2 w-full h-1 bg-purple-500/50 rounded-full animate-pulse" />
-              </div>
-              <div className="p-4 bg-black/20 rounded-lg border border-pink-500/20">
-                <div className="text-pink-400 font-bold mb-2">Step 3</div>
-                <p className="text-sm text-gray-400">Set your job preferences</p>
-                <div className="mt-2 w-full h-1 bg-gray-700 rounded-full" />
-              </div>
-            </div>
-          </>
-        ) : (
-          <h2 className="text-3xl font-bold mb-8">CV Details</h2>
-        )}
+            </>
+          ) : (
+            <h2 className="text-3xl font-bold mb-8">CV Details</h2>
+          )}
 
-        <div className="flex gap-8">
-          {/* Main Form */}
-          <div className="flex-1">
-            <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-white/20 animate-glow">
-              <PersonalInfo
-                fullName={formData.full_name}
-                phoneNumber={formData.phone_number}
-                email={formData.email}
-                website={formData.website_or_portfolio}
-                address={formData.address}
-                onUpdate={handleInputChange}
-              />
-
-              <section className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Professional Summary</h3>
-                <textarea
-                  placeholder="Write a brief professional summary..."
-                  value={formData.summary}
-                  onChange={(e) => handleInputChange('summary', e.target.value)}
-                  className="w-full bg-black/20 p-3 rounded border border-white/10 focus:border-blue-500 outline-none"
-                  rows={4}
+          <div className="flex gap-8">
+            {/* Main Form */}
+            <div className="flex-1">
+              <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl ring-1 ring-white/20 animate-glow">
+                <PersonalInfo
+                  fullName={formData.full_name}
+                  phoneNumber={formData.phone_number}
+                  email={formData.email}
+                  website={formData.website_or_portfolio}
+                  address={formData.address}
+                  onUpdate={handleInputChange}
                 />
-              </section>
 
-              <ExperienceSection
-                experiences={formData.experience}
-                onAdd={() => handleInputChange('experience', [...formData.experience, {
-                  end_date: 'Present',
-                  location: '',
-                  job_title: '',
-                  start_date: '',
-                  description: '',
-                  company_name: ''
-                }])}
-                onUpdate={(index, experience) => handleInputChange('experience', 
-                  formData.experience.map((exp, i) => i === index ? experience : exp)
-                )}
-                onRemove={(index) => handleInputChange('experience',
-                  formData.experience.filter((_, i) => i !== index)
-                )}
-              />
+                <section className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Professional Summary</h3>
+                  <textarea
+                    placeholder="Write a brief professional summary..."
+                    value={formData.summary}
+                    onChange={(e) => handleInputChange('summary', e.target.value)}
+                    className="w-full bg-black/20 p-3 rounded border border-white/10 focus:border-blue-500 outline-none"
+                    rows={4}
+                  />
+                </section>
 
-              <EducationSection
-                education={formData.education}
-                onAdd={() => handleInputChange('education', [...formData.education, {
-                  major: '',
-                  minor: '',
-                  degree: '',
-                  additional_info: '',
-                  graduation_year: '',
-                  institution_name: ''
-                }])}
-                onUpdate={(index, education) => handleInputChange('education',
-                  formData.education.map((edu, i) => i === index ? education : edu)
-                )}
-                onRemove={(index) => handleInputChange('education',
-                  formData.education.filter((_, i) => i !== index)
-                )}
-              />
+                <ExperienceSection
+                  experiences={formData.experience}
+                  onAdd={() => handleInputChange('experience', [...formData.experience, {
+                    end_date: 'Present',
+                    location: '',
+                    job_title: '',
+                    start_date: '',
+                    description: '',
+                    company_name: ''
+                  }])}
+                  onUpdate={(index, experience) => handleInputChange('experience', 
+                    formData.experience.map((exp, i) => i === index ? experience : exp)
+                  )}
+                  onRemove={(index) => handleInputChange('experience',
+                    formData.experience.filter((_, i) => i !== index)
+                  )}
+                />
 
-              <SkillsSection
-                skills={formData.skills}
-                newSkill={newSkill}
-                onNewSkillChange={setNewSkill}
-                onAddSkill={handleAddSkill}
-                onRemoveSkill={handleRemoveSkill}
-              />
+                <EducationSection
+                  education={formData.education}
+                  onAdd={() => handleInputChange('education', [...formData.education, {
+                    major: '',
+                    minor: '',
+                    degree: '',
+                    additional_info: '',
+                    graduation_year: '',
+                    institution_name: ''
+                  }])}
+                  onUpdate={(index, education) => handleInputChange('education',
+                    formData.education.map((edu, i) => i === index ? education : edu)
+                  )}
+                  onRemove={(index) => handleInputChange('education',
+                    formData.education.filter((_, i) => i !== index)
+                  )}
+                />
 
-              <CertificationsSection
-                certifications={formData.certifications}
-                onAdd={() => handleInputChange('certifications', [...formData.certifications, {
-                  issue_date: '',
-                  expiry_date: '',
-                  certification: '',
-                  issuing_organization: ''
-                }])}
-                onUpdate={(index, certification) => handleInputChange('certifications',
-                  formData.certifications.map((cert, i) => i === index ? certification : cert)
-                )}
-                onRemove={(index) => handleInputChange('certifications',
-                  formData.certifications.filter((_, i) => i !== index)
-                )}
-              />
+                <SkillsSection
+                  skills={formData.skills}
+                  newSkill={newSkill}
+                  onNewSkillChange={setNewSkill}
+                  onAddSkill={handleAddSkill}
+                  onRemoveSkill={handleRemoveSkill}
+                />
 
-              <LanguagesSection
-                languages={formData.languages}
-                onAdd={() => handleInputChange('languages', [...formData.languages, {
-                  language: '',
-                  Proficiency: ''
-                }])}
-                onUpdate={(index, language) => handleInputChange('languages',
-                  formData.languages.map((lang, i) => i === index ? language : lang)
-                )}
-                onRemove={(index) => handleInputChange('languages',
-                  formData.languages.filter((_, i) => i !== index)
-                )}
-              />
+                <CertificationsSection
+                  certifications={formData.certifications}
+                  onAdd={() => handleInputChange('certifications', [...formData.certifications, {
+                    issue_date: '',
+                    expiry_date: '',
+                    certification: '',
+                    issuing_organization: ''
+                  }])}
+                  onUpdate={(index, certification) => handleInputChange('certifications',
+                    formData.certifications.map((cert, i) => i === index ? certification : cert)
+                  )}
+                  onRemove={(index) => handleInputChange('certifications',
+                    formData.certifications.filter((_, i) => i !== index)
+                  )}
+                />
 
-              <ActivitiesSection
-                activities={formData.activities}
-                onAdd={() => handleInputChange('activities', [...formData.activities, {
-                  activity: '',
-                  description: ''
-                }])}
-                onUpdate={(index, activity) => handleInputChange('activities',
-                  formData.activities.map((act, i) => i === index ? activity : act)
-                )}
-                onRemove={(index) => handleInputChange('activities',
-                  formData.activities.filter((_, i) => i !== index)
-                )}
-              />
+                <LanguagesSection
+                  languages={formData.languages}
+                  onAdd={() => handleInputChange('languages', [...formData.languages, {
+                    language: '',
+                    Proficiency: ''
+                  }])}
+                  onUpdate={(index, language) => handleInputChange('languages',
+                    formData.languages.map((lang, i) => i === index ? language : lang)
+                  )}
+                  onRemove={(index) => handleInputChange('languages',
+                    formData.languages.filter((_, i) => i !== index)
+                  )}
+                />
 
-              <ReferencesSection
-                references={formData.reference_list}
-                onAdd={() => handleInputChange('reference_list', [...formData.reference_list, {
-                  Name: '',
-                  contact_info: '',
-                  company_or_affiliation: ''
-                }])}
-                onUpdate={(index, reference) => handleInputChange('reference_list',
-                  formData.reference_list.map((ref, i) => i === index ? reference : ref)
-                )}
-                onRemove={(index) => handleInputChange('reference_list',
-                  formData.reference_list.filter((_, i) => i !== index)
-                )}
-              />
+                <ActivitiesSection
+                  activities={formData.activities}
+                  onAdd={() => handleInputChange('activities', [...formData.activities, {
+                    activity: '',
+                    description: ''
+                  }])}
+                  onUpdate={(index, activity) => handleInputChange('activities',
+                    formData.activities.map((act, i) => i === index ? activity : act)
+                  )}
+                  onRemove={(index) => handleInputChange('activities',
+                    formData.activities.filter((_, i) => i !== index)
+                  )}
+                />
 
-              {/* Save Button */}
-              <div className="flex justify-between items-center">
-                {isNew && (
-                  <div className="text-sm text-gray-400">
-                    Next: Set your job preferences and start receiving matched opportunities
-                  </div>
-                )}
-                <button
-                  onClick={handleSave}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-                >
-                  <Save className="w-5 h-5" /> {isNew ? 'Continue to Next Step' : 'Save Details'}
-                </button>
+                <ReferencesSection
+                  references={formData.reference_list}
+                  onAdd={() => handleInputChange('reference_list', [...formData.reference_list, {
+                    Name: '',
+                    contact_info: '',
+                    company_or_affiliation: ''
+                  }])}
+                  onUpdate={(index, reference) => handleInputChange('reference_list',
+                    formData.reference_list.map((ref, i) => i === index ? reference : ref)
+                  )}
+                  onRemove={(index) => handleInputChange('reference_list',
+                    formData.reference_list.filter((_, i) => i !== index)
+                  )}
+                />
+
+                {/* Save Button */}
+                <div className="flex justify-between items-center">
+                  {isNew && (
+                    <div className="text-sm text-gray-400">
+                      Next: Set your job preferences and start receiving matched opportunities
+                    </div>
+                  )}
+                  <button
+                    onClick={handleSave}
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                  >
+                    <Save className="w-5 h-5" /> {isNew ? 'Continue to Next Step' : 'Save Details'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Validation Checklist */}
-          <div className="w-80 flex-shrink-0">
-            <div className="sticky top-24">
-              <ValidationChecklist formData={formData} />
+            {/* Validation Checklist */}
+            <div className="w-80 flex-shrink-0">
+              <div className="sticky top-24">
+                <ValidationChecklist formData={formData} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Save Confirmation Modal */}
+      {showSaveModal && (
+        <SaveConfirmationModal
+          missingRecommended={missingRecommended}
+          onConfirm={() => {
+            setShowSaveModal(false);
+            saveDetails();
+          }}
+          onCancel={() => setShowSaveModal(false)}
+        />
+      )}
+    </>
   );
 }
